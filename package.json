@@ -4,11 +4,10 @@
   "description": "실외기 유지보수 관리 시스템",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build",
-    "start": "cd frontend && npm run start",
-    "dev": "cd frontend && npm run dev",
-    "lint": "cd frontend && npm run lint",
-    "type-check": "cd frontend && npx tsc --noEmit"
+    "build": "npm run build --prefix frontend",
+    "start": "npm run start --prefix frontend",
+    "dev": "npm run dev --prefix frontend",
+    "install": "npm install --prefix frontend"
   },
   "engines": {
     "node": ">=18.17.0",

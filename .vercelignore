@@ -1,23 +1,14 @@
-# Vercel deployment optimization
+# Vercel deployment optimization - keep only frontend
 /backend
 /infra
-*.md
-*.py
-*.sh
-*.xlsx
-*.pptx
+/*.md
+/*.py
+/*.sh
+/*.xlsx
+/*.pptx
 .git*
 .env*
 .claude*
 .npm*
 .cache
 node_modules
-Library
-Applications
-Documents
-Downloads
-Movies
-Music
-Pictures
-Desktop
-Public

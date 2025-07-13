@@ -8,20 +8,29 @@ const withPWA = require("next-pwa")({
 });
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Remove standalone for Vercel
+  // output: 'standalone',
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
+  // swcMinify is deprecated in Next.js 15, SWC is default
   compress: true,
   
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+      },
+    ],
     formats: ['image/webp', 'image/avif'],
   },
   
-  experimental: {
-    optimizeCss: true,
-  },
+  // experimental: {
+  //   optimizeCss: true,
+  // },
+  
+  // Fix trailing slash issue
+  trailingSlash: false,
   
   async headers() {
     return [
@@ -41,6 +50,16 @@ const nextConfig: NextConfig = {
             value: '1; mode=block',
           },
         ],
+      },
+    ];
+  },
+  
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
       },
     ];
   },

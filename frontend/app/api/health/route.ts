@@ -7,7 +7,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       service: 'frontend'
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { 
         status: 'unhealthy',

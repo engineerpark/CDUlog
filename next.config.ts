@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Vercel 배포 최적화
+  // Static Export 설정
+  output: 'export',
   reactStrictMode: true,
   poweredByHeader: false,
-  compress: true,
-  generateEtags: false,
+  images: {
+    unoptimized: true
+  },
+  // 빌드 출력 디렉토리
+  distDir: '.next',
 };
 
 export default nextConfig;

@@ -5,10 +5,8 @@
       "production": true
     }
   },
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm ci",
-  "devCommand": "npm run dev",
-  "ignoreCommand": "exit 1"
+  "framework": null,
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "out",
+  "installCommand": "echo 'Dependencies already installed'"
 }

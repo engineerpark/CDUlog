@@ -1,0 +1,11 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd .. && next dev --turbopack",
+    "build": "cd .. && next build && mkdir -p .next && cp -r ../.next/* .next/",
+    "start": "cd .. && next start",
+    "lint": "cd .. && next lint"
+  }
+}

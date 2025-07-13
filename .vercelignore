@@ -1,7 +1,4 @@
-# Vercel deployment optimization - keep only frontend
-/backend
-/infra
-/*.md
+# Vercel deployment optimization
 /*.py
 /*.sh
 /*.xlsx
@@ -11,4 +8,3 @@
 .claude*
 .npm*
 .cache
-node_modules

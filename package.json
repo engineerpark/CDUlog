@@ -1,13 +1,29 @@
 {
   "name": "cdulog",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "description": "실외기 유지보수 관리 시스템",
   "private": true,
   "scripts": {
-    "build": "npm run build --prefix frontend",
-    "start": "npm run start --prefix frontend",
-    "dev": "npm run dev --prefix frontend",
-    "install": "npm install --prefix frontend"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.7",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   },
   "engines": {
     "node": ">=18.17.0",

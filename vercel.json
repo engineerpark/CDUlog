@@ -1,7 +1,14 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "main": false,
+      "production": true
+    }
+  },
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm ci",
-  "devCommand": "npm run dev"
+  "devCommand": "npm run dev",
+  "ignoreCommand": "exit 1"
 }

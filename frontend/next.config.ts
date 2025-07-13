@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   trailingSlash: false,
+  output: 'standalone',
+  distDir: '.next',
+  poweredByHeader: false,
+  reactStrictMode: true,
 };
 
 export default nextConfig;

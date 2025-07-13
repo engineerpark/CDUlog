@@ -15,9 +15,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "실외기 유지보수 관리 시스템",
   description: "실외기의 유지보수 이력을 간단하게 현장에서 입력할 수 있는 서비스",
-  manifest: "/manifest.json",
-  themeColor: "#ffffff",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({

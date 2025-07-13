@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 최소한의 안정적 설정
+  // Vercel 최적화된 안정적 설정
+  reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: false,
+  httpAgentOptions: {
+    keepAlive: true,
+  },
 };
 
 export default nextConfig;

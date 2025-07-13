@@ -1,0 +1,23 @@
+# Vercel deployment optimization
+/backend
+/infra
+*.md
+*.py
+*.sh
+*.xlsx
+*.pptx
+.git*
+.env*
+.claude*
+.npm*
+.cache
+node_modules
+Library
+Applications
+Documents
+Downloads
+Movies
+Music
+Pictures
+Desktop
+Public

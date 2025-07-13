@@ -63,7 +63,7 @@ export default function Home() {
         </div>
 
         <div className="mt-16 text-center text-sm text-gray-500">
-          <p>© 2025 실외기 유지보수 관리 시스템. Built with Next.js 14 & FastAPI</p>
+          <p>© 2025 실외기 유지보수 관리 시스템. Built with Next.js 15 & FastAPI</p>
         </div>
       </div>
     </div>

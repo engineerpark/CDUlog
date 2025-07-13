@@ -1,17 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  trailingSlash: false,
-  output: 'standalone',
-  distDir: '.next',
-  poweredByHeader: false,
-  reactStrictMode: true,
+  // 최소한의 안정적 설정
 };
 
 export default nextConfig;

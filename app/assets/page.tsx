@@ -21,6 +21,7 @@ export default function AssetsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+  const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   
   // 필터 상태
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
@@ -81,12 +82,16 @@ export default function AssetsPage() {
       const result = await response.json();
       
       if (result.success) {
-        setMaintenanceRecords(result.data.filter((record: MaintenanceRecord) => record.isActive));
+        const records = result.data as MaintenanceRecord[];
+        setMaintenanceRecords(records.filter(record => record.isActive));
+        setAllMaintenanceRecords(records);
       } else {
         setMaintenanceRecords([]);
+        setAllMaintenanceRecords([]);
       }
     } catch {
       setMaintenanceRecords([]);
+      setAllMaintenanceRecords([]);
     }
   };
 
@@ -148,6 +153,31 @@ export default function AssetsPage() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('loginTime');
     router.push('/');
+  };
+
+  const handleCSVDownload = async () => {
+    try {
+      const response = await fetch('/api/export/maintenance-records?format=csv');
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const today = new Date().toISOString().split('T')[0];
+        a.download = `maintenance-records-${today}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        setError('CSV 파일이 다운로드되었습니다.');
+        setTimeout(() => setError(null), 3000);
+      } else {
+        setError('CSV 다운로드에 실패했습니다.');
+      }
+    } catch {
+      setError('네트워크 오류가 발생했습니다.');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -315,6 +345,34 @@ export default function AssetsPage() {
               </div>
             )}
 
+            {/* 보수 이력 목록 */}
+            {allMaintenanceRecords.filter(record => !record.isActive).length > 0 && (
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">보수 이력</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {allMaintenanceRecords
+                    .filter(record => !record.isActive)
+                    .sort((a, b) => new Date(b.resolvedDate || b.updatedAt).getTime() - new Date(a.resolvedDate || a.updatedAt).getTime())
+                    .map((record) => (
+                    <div key={record.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="font-medium text-gray-900">{record.description}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        <div>입력: {new Date(record.createdAt).toLocaleDateString('ko-KR')} {new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div>
+                        {record.resolvedDate && (
+                          <div>해제: {new Date(record.resolvedDate).toLocaleDateString('ko-KR')} {new Date(record.resolvedDate).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {record.resolvedBy}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center mt-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          완료
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 상태 변경 */}
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900 mb-4">상태 변경</h3>
@@ -403,12 +461,20 @@ export default function AssetsPage() {
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">LG Chem 실외기 관리 시스템</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            로그아웃
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleCSVDownload}
+              className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              CSV 다운로드
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+            >
+              로그아웃
+            </button>
+          </div>
         </div>
 
         {/* 필터 */}

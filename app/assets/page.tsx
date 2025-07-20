@@ -202,7 +202,17 @@ export default function AssetsPage() {
   };
 
   const handleMaintenanceRecordResolve = async (recordId: string, notes?: string) => {
+    if (!selectedUnit) return;
+    
+    setIsSubmitting(true);
+    
     try {
+      console.log('Resolving maintenance record:', {
+        recordId,
+        notes,
+        unitId: selectedUnit.id
+      });
+      
       const response = await fetch(`/api/maintenance-records/${recordId}`, {
         method: 'PUT',
         headers: {
@@ -215,10 +225,13 @@ export default function AssetsPage() {
         }),
       });
 
-      if (response.ok) {
+      const result = await response.json();
+      console.log('API Response:', result);
+
+      if (response.ok && result.success) {
         // 성공 시 목록 새로고침
         await fetchOutdoorUnits();
-        await fetchMaintenanceRecords(selectedUnit!.id);
+        await fetchMaintenanceRecords(selectedUnit.id);
         setError('보수 항목이 해제되었습니다.');
         
         // 3초 후 성공 메시지 제거
@@ -229,10 +242,13 @@ export default function AssetsPage() {
         setSelectedRecordForResolve(null);
         setResolveNotes('');
       } else {
-        setError('보수 항목 해제에 실패했습니다');
+        setError(`보수 항목 해제에 실패했습니다: ${result.error || '알 수 없는 오류'}`);
       }
-    } catch {
+    } catch (err) {
+      console.error('Error resolving maintenance record:', err);
       setError('네트워크 오류가 발생했습니다');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -614,34 +630,43 @@ export default function AssetsPage() {
             <div className="p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">보수 항목 해제</h3>
               
-              <div className="mb-4">
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+              
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  해제 내역 (선택사항)
+                  완료 내역 및 비고사항 <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={resolveNotes}
                   onChange={(e) => setResolveNotes(e.target.value)}
-                  placeholder="보수 완료 내역이나 변경사항을 입력하세요..."
+                  placeholder="예: 팬모터 교체 완료, 냉매 보충으로 누출 문제 해결, 압축기 정상 작동 확인 등..."
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isSubmitting}
                 />
-                <p className="mt-1 text-sm text-gray-500">
-                  구체적인 조치 내용을 입력하면 이력 관리에 도움이 됩니다.
+                <p className="mt-2 text-sm text-gray-600">
+                  📝 <strong>필수입력:</strong> 보수 완료 내역을 입력해주세요. 향후 이력 관리 및 패턴 분석에 활용됩니다.
                 </p>
               </div>
 
               <div className="flex justify-end gap-3">
                 <button
                   onClick={handleResolveModalClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleResolveSubmit}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                  disabled={isSubmitting || !resolveNotes.trim()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  해제
+                  {isSubmitting ? '처리중...' : '완료 처리'}
                 </button>
               </div>
             </div>

@@ -9,9 +9,12 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     
+    console.log('PUT maintenance record:', { id, body });
+    
     const recordIndex = maintenanceRecords.findIndex(record => record.id === id);
     
     if (recordIndex === -1) {
+      console.log('Maintenance record not found:', id);
       return NextResponse.json(
         { success: false, error: 'Maintenance record not found' },
         { status: 404 }
@@ -21,13 +24,18 @@ export async function PUT(
     const record = maintenanceRecords[recordIndex];
     const now = new Date().toISOString();
     
+    console.log('Found record:', record);
+    
     // 보수 항목 해제 처리
     if ('isActive' in body && !body.isActive) {
+      console.log('Resolving maintenance record');
       record.isActive = false;
       record.resolvedDate = now;
       record.resolvedBy = body.resolvedBy || 'LG Chem 현장작업자';
       record.resolvedNotes = body.resolvedNotes || '';
       record.updatedAt = now;
+      
+      console.log('Updated record:', record);
       
       // 실외기 상태 업데이트
       updateUnitStatus(record.outdoorUnitId);
@@ -36,6 +44,7 @@ export async function PUT(
       Object.assign(record, body, { updatedAt: now });
     }
 
+    console.log('Returning success response');
     return NextResponse.json({
       success: true,
       data: record

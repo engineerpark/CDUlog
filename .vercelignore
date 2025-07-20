@@ -1,10 +1,6 @@
-# Vercel deployment optimization
-/*.py
-/*.sh
-/*.xlsx
-/*.pptx
-.git*
-.env*
-.claude*
-.npm*
-.cache
+# Vercel 새 프로젝트 전용 배포
+.vercel
+.env*.local
+node_modules
+.next
+*.log

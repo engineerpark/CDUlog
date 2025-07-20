@@ -3,14 +3,15 @@ import { OutdoorUnit, UpdateOutdoorUnitRequest } from '../../../types/outdoor-un
 
 // 임시 데이터 저장소 - 실제로는 데이터베이스에서 가져와야 함
 // 이 부분은 실제 데이터베이스 연결 시 수정 필요
-let outdoorUnits: OutdoorUnit[] = [];
+const outdoorUnits: OutdoorUnit[] = [];
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const unit = outdoorUnits.find(unit => unit.id === params.id);
+    const { id } = await params;
+    const unit = outdoorUnits.find(unit => unit.id === id);
     
     if (!unit) {
       return NextResponse.json(
@@ -34,11 +35,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body: UpdateOutdoorUnitRequest = await request.json();
-    const unitIndex = outdoorUnits.findIndex(unit => unit.id === params.id);
+    const unitIndex = outdoorUnits.findIndex(unit => unit.id === id);
     
     if (unitIndex === -1) {
       return NextResponse.json(
@@ -50,7 +52,7 @@ export async function PUT(
     // 시리얼 번호 중복 검사 (자신 제외)
     if (body.serialNumber) {
       const existingUnit = outdoorUnits.find(
-        unit => unit.serialNumber === body.serialNumber && unit.id !== params.id
+        unit => unit.serialNumber === body.serialNumber && unit.id !== id
       );
       if (existingUnit) {
         return NextResponse.json(
@@ -66,7 +68,7 @@ export async function PUT(
     const updatedUnit: OutdoorUnit = {
       ...outdoorUnits[unitIndex],
       ...body,
-      id: params.id, // ID는 변경되지 않도록
+      id: id, // ID는 변경되지 않도록
       updatedAt: new Date().toISOString()
     };
 
@@ -88,10 +90,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const unitIndex = outdoorUnits.findIndex(unit => unit.id === params.id);
+    const { id } = await params;
+    const unitIndex = outdoorUnits.findIndex(unit => unit.id === id);
     
     if (unitIndex === -1) {
       return NextResponse.json(

@@ -23,7 +23,7 @@ export default function AssetsPage() {
       } else {
         setError('Failed to fetch outdoor units');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     } finally {
       setIsLoading(false);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OutdoorUnit, CreateOutdoorUnitRequest } from '../../types/outdoor-unit';
 
 // 임시 데이터 저장소 (실제 프로덕션에서는 데이터베이스 사용)
-let outdoorUnits: OutdoorUnit[] = [];
+const outdoorUnits: OutdoorUnit[] = [];
 let nextId = 1;
 
 // 샘플 데이터 초기화

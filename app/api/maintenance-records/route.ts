@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MaintenanceRecord, CreateMaintenanceRecordRequest } from '../../types/outdoor-unit';
 
 // 임시 데이터 저장소 (실제 프로덕션에서는 데이터베이스 사용)
-let maintenanceRecords: MaintenanceRecord[] = [];
+const maintenanceRecords: MaintenanceRecord[] = [];
 let nextMaintenanceId = 1;
-
-// 실외기 데이터에 접근하기 위한 임포트 (실제로는 공유 데이터베이스 사용)
-import outdoorUnitsModule from '../outdoor-units/route';
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,7 +60,7 @@ export async function POST(request: NextRequest) {
     // 실외기의 최근 점검일과 다음 점검 예정일 업데이트
     // 실제 구현에서는 데이터베이스 트랜잭션으로 처리
     try {
-      const updateResponse = await fetch(`${request.nextUrl.origin}/api/outdoor-units/${body.outdoorUnitId}`, {
+      await fetch(`${request.nextUrl.origin}/api/outdoor-units/${body.outdoorUnitId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

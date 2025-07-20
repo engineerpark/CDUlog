@@ -5,16 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { OutdoorUnit, CreateMaintenanceRecordRequest } from '../../../types/outdoor-unit';
 
-export default function AddMaintenancePage({ params }: { params: { id: string } }) {
+export default function AddMaintenancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [unit, setUnit] = useState<OutdoorUnit | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingUnit, setIsLoadingUnit] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unitId, setUnitId] = useState<string>('');
   
   const today = new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState<CreateMaintenanceRecordRequest>({
-    outdoorUnitId: params.id,
+    outdoorUnitId: '',
     maintenanceDate: today,
     maintenanceType: 'preventive',
     description: '',
@@ -26,25 +27,36 @@ export default function AddMaintenancePage({ params }: { params: { id: string } 
   });
 
   useEffect(() => {
-    fetchOutdoorUnit();
-  }, [params.id]);
+    const resolveParams = async () => {
+      const { id } = await params;
+      setUnitId(id);
+      setFormData(prev => ({ ...prev, outdoorUnitId: id }));
+    };
+    resolveParams();
+  }, [params]);
 
-  const fetchOutdoorUnit = async () => {
-    try {
-      const response = await fetch(`/api/outdoor-units/${params.id}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setUnit(result.data);
-      } else {
-        setError('실외기를 찾을 수 없습니다');
+  useEffect(() => {
+    const fetchOutdoorUnit = async () => {
+      try {
+        const response = await fetch(`/api/outdoor-units/${unitId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          setUnit(result.data);
+        } else {
+          setError('실외기를 찾을 수 없습니다');
+        }
+      } catch {
+        setError('네트워크 오류가 발생했습니다');
+      } finally {
+        setIsLoadingUnit(false);
       }
-    } catch (err) {
-      setError('네트워크 오류가 발생했습니다');
-    } finally {
-      setIsLoadingUnit(false);
+    };
+
+    if (unitId) {
+      fetchOutdoorUnit();
     }
-  };
+  }, [unitId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -68,7 +80,7 @@ export default function AddMaintenancePage({ params }: { params: { id: string } 
       });
 
       if (response.ok) {
-        router.push(`/assets/${params.id}`);
+        router.push(`/assets/${unitId}`);
       } else {
         console.error('Failed to create maintenance record');
         setError('유지보수 기록 저장에 실패했습니다');
@@ -125,7 +137,7 @@ export default function AddMaintenancePage({ params }: { params: { id: string } 
                 )}
               </div>
               <Link
-                href={`/assets/${params.id}`}
+                href={`/assets/${unitId}`}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,7 +286,7 @@ export default function AddMaintenancePage({ params }: { params: { id: string } 
 
               <div className="flex justify-end space-x-3">
                 <Link
-                  href={`/assets/${params.id}`}
+                  href={`/assets/${unitId}`}
                   className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   취소

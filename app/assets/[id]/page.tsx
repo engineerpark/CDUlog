@@ -1,36 +1,45 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { OutdoorUnit, MaintenanceRecord } from '../../types/outdoor-unit';
+import { OutdoorUnit } from '../../types/outdoor-unit';
 
-export default function OutdoorUnitDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
+export default function OutdoorUnitDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [unit, setUnit] = useState<OutdoorUnit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unitId, setUnitId] = useState<string>('');
 
   useEffect(() => {
-    fetchOutdoorUnit();
-  }, [params.id]);
+    const resolveParams = async () => {
+      const { id } = await params;
+      setUnitId(id);
+    };
+    resolveParams();
+  }, [params]);
 
-  const fetchOutdoorUnit = async () => {
-    try {
-      const response = await fetch(`/api/outdoor-units/${params.id}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setUnit(result.data);
-      } else {
-        setError('실외기를 찾을 수 없습니다');
+  useEffect(() => {
+    const fetchOutdoorUnit = async () => {
+      try {
+        const response = await fetch(`/api/outdoor-units/${unitId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          setUnit(result.data);
+        } else {
+          setError('실외기를 찾을 수 없습니다');
+        }
+      } catch {
+        setError('네트워크 오류가 발생했습니다');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      setError('네트워크 오류가 발생했습니다');
-    } finally {
-      setIsLoading(false);
+    };
+
+    if (unitId) {
+      fetchOutdoorUnit();
     }
-  };
+  }, [unitId]);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -119,7 +128,7 @@ export default function OutdoorUnitDetailPage({ params }: { params: { id: string
             {getStatusBadge(unit.status)}
           </div>
           <Link
-            href={`/assets/${unit.id}/maintenance`}
+            href={`/assets/${unitId}/maintenance`}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             + 유지보수 기록 추가
@@ -218,7 +227,7 @@ export default function OutdoorUnitDetailPage({ params }: { params: { id: string
                   <p className="mt-1 text-sm text-gray-500">첫 번째 유지보수 기록을 추가해보세요.</p>
                   <div className="mt-6">
                     <Link
-                      href={`/assets/${unit.id}/maintenance`}
+                      href={`/assets/${unitId}/maintenance`}
                       className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                     >
                       + 유지보수 기록 추가

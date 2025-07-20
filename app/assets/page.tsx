@@ -2,12 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { OutdoorUnit } from '../types/outdoor-unit';
+import { OutdoorUnit, CreateMaintenanceRecordRequest } from '../types/outdoor-unit';
+
+const PRESET_ISSUES = [
+  { id: 'refrigerant_leak', label: '냉매 LEAK', description: '냉매 누출 발견' },
+  { id: 'fan_motor_replacement', label: '팬모터 교체 필요', description: '팬모터 교체가 필요한 상태' },
+  { id: 'compressor_replacement', label: '압축기 교체 필요', description: '압축기 교체가 필요한 상태' }
+];
 
 export default function AssetsPage() {
   const [outdoorUnits, setOutdoorUnits] = useState<OutdoorUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const [customInput, setCustomInput] = useState<string>('');
+  const [showCustomInput, setShowCustomInput] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchOutdoorUnits();
@@ -30,20 +40,75 @@ export default function AssetsPage() {
     }
   };
 
+  const handleMaintenanceRecord = async (unitId: string, description: string) => {
+    setIsSubmitting(true);
+    
+    const today = new Date().toISOString().split('T')[0];
+    const maintenanceData: CreateMaintenanceRecordRequest = {
+      outdoorUnitId: unitId,
+      maintenanceDate: today,
+      maintenanceType: 'corrective',
+      description: description,
+      performedBy: '현장작업자',
+      status: 'completed',
+      notes: `현장에서 발견된 문제: ${description}`
+    };
+
+    try {
+      const response = await fetch('/api/maintenance-records', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(maintenanceData),
+      });
+
+      if (response.ok) {
+        // 성공 시 실외기 목록 새로고침
+        await fetchOutdoorUnits();
+        setSelectedUnit(null);
+        setShowCustomInput(null);
+        setCustomInput('');
+      } else {
+        setError('유지보수 기록 저장에 실패했습니다');
+      }
+    } catch {
+      setError('네트워크 오류가 발생했습니다');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePresetIssue = (unitId: string, issue: typeof PRESET_ISSUES[0]) => {
+    handleMaintenanceRecord(unitId, issue.description);
+  };
+
+  const handleCustomIssue = (unitId: string) => {
+    if (customInput.trim()) {
+      handleMaintenanceRecord(unitId, customInput.trim());
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: '정상 운영', className: 'bg-green-100 text-green-800' },
-      maintenance: { label: '점검 중', className: 'bg-yellow-100 text-yellow-800' },
+      active: { label: '정상', className: 'bg-green-100 text-green-800' },
+      maintenance: { label: '점검중', className: 'bg-yellow-100 text-yellow-800' },
       inactive: { label: '비가동', className: 'bg-red-100 text-red-800' }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
     
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.className}`}>
         {config.label}
       </span>
     );
+  };
+
+  const getFactoryName = (unitName: string) => {
+    if (unitName.includes('1공장')) return '1공장';
+    if (unitName.includes('3공장')) return '3공장';
+    return '공장';
   };
 
   if (isLoading) {
@@ -60,13 +125,13 @@ export default function AssetsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">실외기 자산 관리</h1>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">실외기 관리</h1>
           <Link
             href="/assets/add"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
           >
             + 새 실외기 등록
           </Link>
@@ -81,9 +146,7 @@ export default function AssetsPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  오류가 발생했습니다
-                </h3>
+                <h3 className="text-sm font-medium text-red-800">오류가 발생했습니다</h3>
                 <div className="mt-2 text-sm text-red-700">
                   <p>{error}</p>
                 </div>
@@ -92,70 +155,124 @@ export default function AssetsPage() {
           </div>
         )}
 
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           {outdoorUnits.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">등록된 실외기가 없습니다</h3>
               <p className="mt-1 text-sm text-gray-500">새 실외기를 등록하여 관리를 시작하세요.</p>
-              <div className="mt-6">
-                <Link
-                  href="/assets/add"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  + 첫 번째 실외기 등록
-                </Link>
-              </div>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
-              {outdoorUnits.map((unit) => (
-                <li key={unit.id}>
-                  <Link href={`/assets/${unit.id}`} className="block hover:bg-gray-50 transition-colors duration-200">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                              </svg>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      공장명
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      설비명
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      용량 (kW)
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      점검상태
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      상태 입력
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {outdoorUnits.map((unit) => (
+                    <tr key={unit.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {getFactoryName(unit.name)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {unit.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {unit.capacity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(unit.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {selectedUnit === unit.id ? (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {PRESET_ISSUES.map((issue) => (
+                                <button
+                                  key={issue.id}
+                                  onClick={() => handlePresetIssue(unit.id, issue)}
+                                  disabled={isSubmitting}
+                                  className="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {issue.label}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setShowCustomInput(unit.id)}
+                                disabled={isSubmitting}
+                                className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50"
+                              >
+                                + 직접입력
+                              </button>
                             </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="flex items-center">
-                              <h4 className="text-lg font-medium text-gray-900">{unit.name}</h4>
-                              <div className="ml-2">
-                                {getStatusBadge(unit.status)}
+                            
+                            {showCustomInput === unit.id && (
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={customInput}
+                                  onChange={(e) => setCustomInput(e.target.value)}
+                                  placeholder="문제 상황을 입력하세요"
+                                  className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                                  disabled={isSubmitting}
+                                />
+                                <button
+                                  onClick={() => handleCustomIssue(unit.id)}
+                                  disabled={isSubmitting || !customInput.trim()}
+                                  className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  저장
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowCustomInput(null);
+                                    setCustomInput('');
+                                  }}
+                                  disabled={isSubmitting}
+                                  className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50"
+                                >
+                                  취소
+                                </button>
                               </div>
-                            </div>
-                            <div className="mt-1 text-sm text-gray-600">
-                              <p>{unit.manufacturer} {unit.model} | {unit.capacity}kW | {unit.location}</p>
-                              <p className="text-xs text-gray-500">시리얼: {unit.serialNumber}</p>
-                            </div>
+                            )}
+                            
+                            <button
+                              onClick={() => setSelectedUnit(null)}
+                              disabled={isSubmitting}
+                              className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                            >
+                              닫기
+                            </button>
                           </div>
-                        </div>
-                        <div className="flex flex-col items-end text-sm text-gray-500">
-                          <p>설치: {new Date(unit.installationDate).toLocaleDateString('ko-KR')}</p>
-                          {unit.nextMaintenanceDate && (
-                            <p className="text-orange-600">
-                              다음 점검: {new Date(unit.nextMaintenanceDate).toLocaleDateString('ko-KR')}
-                            </p>
-                          )}
-                          <div className="mt-1">
-                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                        ) : (
+                          <button
+                            onClick={() => setSelectedUnit(unit.id)}
+                            className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+                          >
+                            상태 입력
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

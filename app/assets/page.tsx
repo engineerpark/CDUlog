@@ -23,6 +23,11 @@ export default function AssetsPage() {
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   
+  // 해제 모달 상태
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [selectedRecordForResolve, setSelectedRecordForResolve] = useState<string | null>(null);
+  const [resolveNotes, setResolveNotes] = useState<string>('');
+  
   // 필터 상태
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -196,7 +201,7 @@ export default function AssetsPage() {
     );
   };
 
-  const handleMaintenanceRecordResolve = async (recordId: string) => {
+  const handleMaintenanceRecordResolve = async (recordId: string, notes?: string) => {
     try {
       const response = await fetch(`/api/maintenance-records/${recordId}`, {
         method: 'PUT',
@@ -205,7 +210,8 @@ export default function AssetsPage() {
         },
         body: JSON.stringify({
           isActive: false,
-          resolvedBy: 'LG Chem 현장작업자'
+          resolvedBy: 'LG Chem 현장작업자',
+          resolvedNotes: notes || ''
         }),
       });
 
@@ -217,11 +223,34 @@ export default function AssetsPage() {
         
         // 3초 후 성공 메시지 제거
         setTimeout(() => setError(null), 3000);
+        
+        // 모달 닫기
+        setShowResolveModal(false);
+        setSelectedRecordForResolve(null);
+        setResolveNotes('');
       } else {
         setError('보수 항목 해제에 실패했습니다');
       }
     } catch {
       setError('네트워크 오류가 발생했습니다');
+    }
+  };
+
+  const handleResolveModalOpen = (recordId: string) => {
+    setSelectedRecordForResolve(recordId);
+    setShowResolveModal(true);
+    setResolveNotes('');
+  };
+
+  const handleResolveModalClose = () => {
+    setShowResolveModal(false);
+    setSelectedRecordForResolve(null);
+    setResolveNotes('');
+  };
+
+  const handleResolveSubmit = () => {
+    if (selectedRecordForResolve) {
+      handleMaintenanceRecordResolve(selectedRecordForResolve, resolveNotes);
     }
   };
 
@@ -334,7 +363,7 @@ export default function AssetsPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleMaintenanceRecordResolve(record.id)}
+                        onClick={() => handleResolveModalOpen(record.id)}
                         className="ml-3 px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
                       >
                         해제
@@ -360,6 +389,9 @@ export default function AssetsPage() {
                         <div>입력: {new Date(record.createdAt).toLocaleDateString('ko-KR')} {new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div>
                         {record.resolvedDate && (
                           <div>해제: {new Date(record.resolvedDate).toLocaleDateString('ko-KR')} {new Date(record.resolvedDate).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {record.resolvedBy}</div>
+                        )}
+                        {record.resolvedNotes && (
+                          <div className="mt-1 p-2 bg-white border border-gray-200 rounded text-gray-700">해제 내역: {record.resolvedNotes}</div>
                         )}
                       </div>
                       <div className="flex items-center mt-2">
@@ -574,6 +606,48 @@ export default function AssetsPage() {
           <p>행을 클릭하면 해당 설비의 보수 항목을 입력할 수 있습니다.</p>
         </div>
       </div>
+
+      {/* 해제 모달 */}
+      {showResolveModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">보수 항목 해제</h3>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  해제 내역 (선택사항)
+                </label>
+                <textarea
+                  value={resolveNotes}
+                  onChange={(e) => setResolveNotes(e.target.value)}
+                  placeholder="보수 완료 내역이나 변경사항을 입력하세요..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  구체적인 조치 내용을 입력하면 이력 관리에 도움이 됩니다.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={handleResolveModalClose}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleResolveSubmit}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                >
+                  해제
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,6 +26,7 @@ export async function PUT(
       record.isActive = false;
       record.resolvedDate = now;
       record.resolvedBy = body.resolvedBy || 'LG Chem 현장작업자';
+      record.resolvedNotes = body.resolvedNotes || '';
       record.updatedAt = now;
       
       // 실외기 상태 업데이트

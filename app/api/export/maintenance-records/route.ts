@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       '상태',
       '해제일자',
       '해제작업자',
+      '해제내역',
       '비고'
     ];
 
@@ -66,6 +67,7 @@ export async function GET(request: NextRequest) {
           '',  // 상태
           '',  // 해제일자
           '',  // 해제작업자
+          '',  // 해제내역
           unit.notes || ''  // 비고
         ];
         csvRows.push(row.map(field => `"${field}"`).join(','));
@@ -92,6 +94,7 @@ export async function GET(request: NextRequest) {
             recordStatusLabel,
             record.resolvedDate || '',
             record.resolvedBy || '',
+            record.resolvedNotes || '',
             record.notes || ''
           ];
           csvRows.push(row.map(field => `"${field}"`).join(','));

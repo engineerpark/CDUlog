@@ -11,6 +11,9 @@ export interface MaintenanceRecord {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  isActive: boolean;
+  resolvedDate?: string;
+  resolvedBy?: string;
 }
 
 export interface OutdoorUnit {

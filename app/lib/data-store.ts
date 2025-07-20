@@ -86,3 +86,33 @@ export const initializeSampleData = () => {
 
 export const getNextUnitId = () => nextUnitId++;
 export const getNextMaintenanceId = () => nextMaintenanceId++;
+
+// 실외기 상태 계산 함수
+export const calculateUnitStatus = (unitId: string): 'active' | 'maintenance' | 'inactive' => {
+  const activeMaintenanceRecords = maintenanceRecords.filter(
+    record => record.outdoorUnitId === unitId && record.isActive
+  );
+  
+  // 비가동 상태는 사용자가 수동으로 설정
+  const unit = outdoorUnits.find(u => u.id === unitId);
+  if (unit?.status === 'inactive') {
+    return 'inactive';
+  }
+  
+  // 활성 보수 항목이 있으면 보수필요
+  if (activeMaintenanceRecords.length > 0) {
+    return 'maintenance';
+  }
+  
+  // 그 외에는 정상가동
+  return 'active';
+};
+
+// 실외기 상태 업데이트 함수
+export const updateUnitStatus = (unitId: string) => {
+  const unit = outdoorUnits.find(u => u.id === unitId);
+  if (unit && unit.status !== 'inactive') {
+    unit.status = calculateUnitStatus(unitId);
+    unit.updatedAt = new Date().toISOString();
+  }
+};

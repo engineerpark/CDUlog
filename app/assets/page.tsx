@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { OutdoorUnit, CreateMaintenanceRecordRequest } from '../types/outdoor-unit';
+import { OutdoorUnit, CreateMaintenanceRecordRequest, MaintenanceRecord } from '../types/outdoor-unit';
 
 const PRESET_ISSUES = [
   { id: 'refrigerant_leak', label: '냉매 LEAK', description: '냉매 누출 발견', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
@@ -20,6 +20,7 @@ export default function AssetsPage() {
   const [customInput, setCustomInput] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   
   // 필터 상태
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
@@ -74,6 +75,21 @@ export default function AssetsPage() {
     }
   };
 
+  const fetchMaintenanceRecords = async (unitId: string) => {
+    try {
+      const response = await fetch(`/api/maintenance-records?outdoorUnitId=${unitId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setMaintenanceRecords(result.data.filter((record: MaintenanceRecord) => record.isActive));
+      } else {
+        setMaintenanceRecords([]);
+      }
+    } catch {
+      setMaintenanceRecords([]);
+    }
+  };
+
   const handleMaintenanceRecord = async (description: string) => {
     if (!selectedUnit) return;
     
@@ -100,9 +116,9 @@ export default function AssetsPage() {
       });
 
       if (response.ok) {
-        // 성공 시 실외기 목록 새로고침 및 카드 닫기
+        // 성공 시 실외기 목록 새로고침 및 보수 항목 목록 새로고침
         await fetchOutdoorUnits();
-        setSelectedUnit(null);
+        await fetchMaintenanceRecords(selectedUnit.id);
         setCustomInput('');
         setError('유지보수 기록이 저장되었습니다.');
         
@@ -136,8 +152,8 @@ export default function AssetsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: '정상', className: 'bg-green-100 text-green-800' },
-      maintenance: { label: '점검중', className: 'bg-yellow-100 text-yellow-800' },
+      active: { label: '정상가동', className: 'bg-green-100 text-green-800' },
+      maintenance: { label: '보수필요', className: 'bg-yellow-100 text-yellow-800' },
       inactive: { label: '비가동', className: 'bg-red-100 text-red-800' }
     };
     
@@ -148,6 +164,67 @@ export default function AssetsPage() {
         {config.label}
       </span>
     );
+  };
+
+  const handleMaintenanceRecordResolve = async (recordId: string) => {
+    try {
+      const response = await fetch(`/api/maintenance-records/${recordId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isActive: false,
+          resolvedBy: 'LG Chem 현장작업자'
+        }),
+      });
+
+      if (response.ok) {
+        // 성공 시 목록 새로고침
+        await fetchOutdoorUnits();
+        await fetchMaintenanceRecords(selectedUnit!.id);
+        setError('보수 항목이 해제되었습니다.');
+        
+        // 3초 후 성공 메시지 제거
+        setTimeout(() => setError(null), 3000);
+      } else {
+        setError('보수 항목 해제에 실패했습니다');
+      }
+    } catch {
+      setError('네트워크 오류가 발생했습니다');
+    }
+  };
+
+  const handleStatusChange = async (newStatus: 'active' | 'inactive') => {
+    if (!selectedUnit) return;
+    
+    try {
+      const response = await fetch(`/api/outdoor-units/${selectedUnit.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus
+        }),
+      });
+
+      if (response.ok) {
+        // 성공 시 목록 새로고침
+        await fetchOutdoorUnits();
+        setError(`상태가 ${newStatus === 'active' ? '정상가동' : '비가동'}으로 변경되었습니다.`);
+        
+        // 3초 후 성공 메시지 제거
+        setTimeout(() => setError(null), 3000);
+        
+        // 선택된 유닛 상태 업데이트
+        setSelectedUnit(prev => prev ? { ...prev, status: newStatus } : null);
+      } else {
+        setError('상태 변경에 실패했습니다');
+      }
+    } catch {
+      setError('네트워크 오류가 발생했습니다');
+    }
   };
 
   const getFactoryName = (unitName: string) => {
@@ -213,13 +290,59 @@ export default function AssetsPage() {
               </div>
             </div>
 
+            {/* 현재 보수 항목 목록 */}
+            {maintenanceRecords.length > 0 && (
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">현재 보수 항목</h3>
+                <div className="space-y-2">
+                  {maintenanceRecords.map((record) => (
+                    <div key={record.id} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{record.description}</div>
+                        <div className="text-sm text-gray-500">
+                          입력: {new Date(record.createdAt).toLocaleDateString('ko-KR')} {new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleMaintenanceRecordResolve(record.id)}
+                        className="ml-3 px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                      >
+                        해제
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 상태 변경 */}
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">상태 변경</h3>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleStatusChange('active')}
+                  disabled={selectedUnit.status === 'active'}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  정상가동
+                </button>
+                <button
+                  onClick={() => handleStatusChange('inactive')}
+                  disabled={selectedUnit.status === 'inactive'}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  비가동
+                </button>
+              </div>
+            </div>
+
             {/* 보수 항목 입력 */}
             <div className="p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">보수 항목 입력</h3>
               
               {error && (
-                <div className={`p-4 mb-4 rounded-md ${error.includes('저장되었습니다') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                  <p className={`text-sm ${error.includes('저장되었습니다') ? 'text-green-800' : 'text-red-800'}`}>{error}</p>
+                <div className={`p-4 mb-4 rounded-md ${error.includes('저장되었습니다') || error.includes('해제되었습니다') || error.includes('변경되었습니다') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                  <p className={`text-sm ${error.includes('저장되었습니다') || error.includes('해제되었습니다') || error.includes('변경되었습니다') ? 'text-green-800' : 'text-red-800'}`}>{error}</p>
                 </div>
               )}
 
@@ -311,8 +434,8 @@ export default function AssetsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">전체 상태</option>
-                <option value="active">정상</option>
-                <option value="maintenance">점검중</option>
+                <option value="active">정상가동</option>
+                <option value="maintenance">보수필요</option>
                 <option value="inactive">비가동</option>
               </select>
             </div>
@@ -320,8 +443,8 @@ export default function AssetsPage() {
         </div>
 
         {error && !selectedUnit && (
-          <div className={`p-4 mb-6 rounded-md ${error.includes('저장되었습니다') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-            <p className={`text-sm ${error.includes('저장되었습니다') ? 'text-green-800' : 'text-red-800'}`}>{error}</p>
+          <div className={`p-4 mb-6 rounded-md ${error.includes('저장되었습니다') || error.includes('해제되었습니다') || error.includes('변경되었습니다') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <p className={`text-sm ${error.includes('저장되었습니다') || error.includes('해제되었습니다') || error.includes('변경되었습니다') ? 'text-green-800' : 'text-red-800'}`}>{error}</p>
           </div>
         )}
 
@@ -355,7 +478,10 @@ export default function AssetsPage() {
                   {filteredUnits.map((unit) => (
                     <tr
                       key={unit.id}
-                      onClick={() => setSelectedUnit(unit)}
+                      onClick={() => {
+                        setSelectedUnit(unit);
+                        fetchMaintenanceRecords(unit.id);
+                      }}
                       className="hover:bg-blue-50 cursor-pointer"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

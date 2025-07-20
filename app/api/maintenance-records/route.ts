@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateMaintenanceRecordRequest } from '../../types/outdoor-unit';
-import { maintenanceRecords, getNextMaintenanceId } from '../../lib/data-store';
+import { maintenanceRecords, getNextMaintenanceId, updateUnitStatus } from '../../lib/data-store';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,29 +47,15 @@ export async function POST(request: NextRequest) {
     const newRecord = {
       id: getNextMaintenanceId().toString(),
       ...body,
+      isActive: true,
       createdAt: now,
       updatedAt: now
     };
 
     maintenanceRecords.push(newRecord);
 
-    // 실외기의 최근 점검일과 다음 점검 예정일 업데이트
-    // 실제 구현에서는 데이터베이스 트랜잭션으로 처리
-    try {
-      await fetch(`${request.nextUrl.origin}/api/outdoor-units/${body.outdoorUnitId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: body.outdoorUnitId,
-          lastMaintenanceDate: body.maintenanceDate,
-          nextMaintenanceDate: body.nextMaintenanceDate
-        }),
-      });
-    } catch (updateError) {
-      console.warn('Failed to update outdoor unit maintenance dates:', updateError);
-    }
+    // 실외기 상태 업데이트
+    updateUnitStatus(body.outdoorUnitId);
 
     return NextResponse.json({
       success: true,

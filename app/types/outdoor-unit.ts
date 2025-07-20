@@ -1,3 +1,18 @@
+export interface MaintenanceRecord {
+  id: string;
+  outdoorUnitId: string;
+  maintenanceDate: string;
+  maintenanceType: 'preventive' | 'corrective' | 'emergency';
+  description: string;
+  performedBy: string;
+  status: 'completed' | 'in_progress' | 'scheduled';
+  nextMaintenanceDate?: string;
+  cost?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface OutdoorUnit {
   id: string;
   name: string;
@@ -11,6 +26,7 @@ export interface OutdoorUnit {
   lastMaintenanceDate?: string;
   nextMaintenanceDate?: string;
   notes?: string;
+  maintenanceRecords?: MaintenanceRecord[];
   createdAt: string;
   updatedAt: string;
 }
@@ -30,5 +46,21 @@ export interface CreateOutdoorUnitRequest {
 }
 
 export interface UpdateOutdoorUnitRequest extends Partial<CreateOutdoorUnitRequest> {
+  id: string;
+}
+
+export interface CreateMaintenanceRecordRequest {
+  outdoorUnitId: string;
+  maintenanceDate: string;
+  maintenanceType: 'preventive' | 'corrective' | 'emergency';
+  description: string;
+  performedBy: string;
+  status: 'completed' | 'in_progress' | 'scheduled';
+  nextMaintenanceDate?: string;
+  cost?: number;
+  notes?: string;
+}
+
+export interface UpdateMaintenanceRecordRequest extends Partial<CreateMaintenanceRecordRequest> {
   id: string;
 }

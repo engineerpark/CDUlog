@@ -113,39 +113,46 @@ export default function AssetsPage() {
             <ul className="divide-y divide-gray-200">
               {outdoorUnits.map((unit) => (
                 <li key={unit.id}>
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  <Link href={`/assets/${unit.id}`} className="block hover:bg-gray-50 transition-colors duration-200">
+                    <div className="px-4 py-4 sm:px-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="flex items-center">
+                              <h4 className="text-lg font-medium text-gray-900">{unit.name}</h4>
+                              <div className="ml-2">
+                                {getStatusBadge(unit.status)}
+                              </div>
+                            </div>
+                            <div className="mt-1 text-sm text-gray-600">
+                              <p>{unit.manufacturer} {unit.model} | {unit.capacity}kW | {unit.location}</p>
+                              <p className="text-xs text-gray-500">시리얼: {unit.serialNumber}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end text-sm text-gray-500">
+                          <p>설치: {new Date(unit.installationDate).toLocaleDateString('ko-KR')}</p>
+                          {unit.nextMaintenanceDate && (
+                            <p className="text-orange-600">
+                              다음 점검: {new Date(unit.nextMaintenanceDate).toLocaleDateString('ko-KR')}
+                            </p>
+                          )}
+                          <div className="mt-1">
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                             </svg>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="flex items-center">
-                            <h4 className="text-lg font-medium text-gray-900">{unit.name}</h4>
-                            <div className="ml-2">
-                              {getStatusBadge(unit.status)}
-                            </div>
-                          </div>
-                          <div className="mt-1 text-sm text-gray-600">
-                            <p>{unit.manufacturer} {unit.model} | {unit.capacity}kW | {unit.location}</p>
-                            <p className="text-xs text-gray-500">시리얼: {unit.serialNumber}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end text-sm text-gray-500">
-                        <p>설치: {new Date(unit.installationDate).toLocaleDateString('ko-KR')}</p>
-                        {unit.nextMaintenanceDate && (
-                          <p className="text-orange-600">
-                            다음 점검: {new Date(unit.nextMaintenanceDate).toLocaleDateString('ko-KR')}
-                          </p>
-                        )}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OutdoorUnit, UpdateOutdoorUnitRequest } from '../../../types/outdoor-unit';
-
-// 임시 데이터 저장소 - 실제로는 데이터베이스에서 가져와야 함
-// 이 부분은 실제 데이터베이스 연결 시 수정 필요
-const outdoorUnits: OutdoorUnit[] = [];
+import { UpdateOutdoorUnitRequest } from '../../../types/outdoor-unit';
+import { outdoorUnits, initializeSampleData } from '../../../lib/data-store';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 데이터 초기화
+    initializeSampleData();
+    
     const { id } = await params;
     const unit = outdoorUnits.find(unit => unit.id === id);
     
@@ -38,6 +38,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 데이터 초기화
+    initializeSampleData();
+    
     const { id } = await params;
     const body: UpdateOutdoorUnitRequest = await request.json();
     const unitIndex = outdoorUnits.findIndex(unit => unit.id === id);
@@ -65,7 +68,7 @@ export async function PUT(
       }
     }
 
-    const updatedUnit: OutdoorUnit = {
+    const updatedUnit = {
       ...outdoorUnits[unitIndex],
       ...body,
       id: id, // ID는 변경되지 않도록
@@ -93,6 +96,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 데이터 초기화
+    initializeSampleData();
+    
     const { id } = await params;
     const unitIndex = outdoorUnits.findIndex(unit => unit.id === id);
     

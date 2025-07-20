@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MaintenanceRecord, CreateMaintenanceRecordRequest } from '../../types/outdoor-unit';
-
-// 임시 데이터 저장소 (실제 프로덕션에서는 데이터베이스 사용)
-const maintenanceRecords: MaintenanceRecord[] = [];
-let nextMaintenanceId = 1;
+import { CreateMaintenanceRecordRequest } from '../../types/outdoor-unit';
+import { maintenanceRecords, getNextMaintenanceId } from '../../lib/data-store';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,15 +44,14 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const newRecord: MaintenanceRecord = {
-      id: nextMaintenanceId.toString(),
+    const newRecord = {
+      id: getNextMaintenanceId().toString(),
       ...body,
       createdAt: now,
       updatedAt: now
     };
 
     maintenanceRecords.push(newRecord);
-    nextMaintenanceId++;
 
     // 실외기의 최근 점검일과 다음 점검 예정일 업데이트
     // 실제 구현에서는 데이터베이스 트랜잭션으로 처리

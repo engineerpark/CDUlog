@@ -397,7 +397,7 @@ export default function AssetsPage() {
                           onClick={() => handleResolveModalOpen(record.id)}
                           className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
                         >
-                          상세해제
+                          내역작성
                         </button>
                       </div>
                     </div>
@@ -657,7 +657,7 @@ export default function AssetsPage() {
 
       {/* 해제 모달 */}
       {showResolveModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">보수 항목 해제</h3>

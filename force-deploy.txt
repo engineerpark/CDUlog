@@ -1,0 +1,5 @@
+Force deployment trigger for inline editing feature
+Timestamp: 2025-01-22 13:10:00 KST
+Changes: Inline maintenance record editing with textarea below each item
+Button text: 내역작성 (History Writing)
+Purpose: Ensure latest changes are deployed to production

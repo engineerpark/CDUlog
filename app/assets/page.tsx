@@ -264,11 +264,11 @@ export default function AssetsPage() {
     }
   };
 
-  const handleResolveModalOpen = (recordId: string) => {
-    setSelectedRecordForResolve(recordId);
-    setShowResolveModal(true);
-    setResolveNotes('');
-  };
+  // const handleResolveModalOpen = (recordId: string) => {
+  //   setSelectedRecordForResolve(recordId);
+  //   setShowResolveModal(true);
+  //   setResolveNotes('');
+  // };
 
   const handleInlineEditToggle = (recordId: string) => {
     if (inlineEditingRecord === recordId) {
@@ -409,7 +409,7 @@ export default function AssetsPage() {
             {/* 현재 보수 항목 목록 */}
             {maintenanceRecords.length > 0 && (
               <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">현재 보수 항목</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">현재 보수 항목 ({maintenanceRecords.length})</h3>
                 <div className="space-y-3">
                   {maintenanceRecords.map((record) => (
                     <div key={record.id} className="bg-yellow-50 border border-yellow-200 rounded-lg">

@@ -27,6 +27,7 @@ export default function AssetsPage() {
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [selectedRecordForResolve, setSelectedRecordForResolve] = useState<string | null>(null);
   const [resolveNotes, setResolveNotes] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<'active' | 'inactive'>('active');
   
   // 필터 상태
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
@@ -46,6 +47,13 @@ export default function AssetsPage() {
     
     checkAuth();
   }, [router]);
+
+  useEffect(() => {
+    // selectedUnit이 변경될 때 상태 동기화
+    if (selectedUnit) {
+      setSelectedStatus(selectedUnit.status === 'inactive' ? 'inactive' : 'active');
+    }
+  }, [selectedUnit]);
 
   useEffect(() => {
     // 필터링 로직
@@ -270,7 +278,7 @@ export default function AssetsPage() {
     }
   };
 
-  const handleStatusChange = async (newStatus: 'active' | 'inactive') => {
+  const handleStatusChange = async () => {
     if (!selectedUnit) return;
     
     try {
@@ -280,20 +288,20 @@ export default function AssetsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: newStatus
+          status: selectedStatus
         }),
       });
 
       if (response.ok) {
         // 성공 시 목록 새로고침
         await fetchOutdoorUnits();
-        setError(`상태가 ${newStatus === 'active' ? '정상가동' : '비가동'}으로 변경되었습니다.`);
+        setError(`상태가 ${selectedStatus === 'active' ? '정상가동' : '비가동'}으로 변경되었습니다.`);
         
         // 3초 후 성공 메시지 제거
         setTimeout(() => setError(null), 3000);
         
         // 선택된 유닛 상태 업데이트
-        setSelectedUnit(prev => prev ? { ...prev, status: newStatus } : null);
+        setSelectedUnit(prev => prev ? { ...prev, status: selectedStatus } : null);
       } else {
         setError('상태 변경에 실패했습니다');
       }
@@ -378,12 +386,20 @@ export default function AssetsPage() {
                           입력: {new Date(record.createdAt).toLocaleDateString('ko-KR')} {new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleResolveModalOpen(record.id)}
-                        className="ml-3 px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
-                      >
-                        해제
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleMaintenanceRecordResolve(record.id, '기본 해제')}
+                          className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                        >
+                          해제
+                        </button>
+                        <button
+                          onClick={() => handleResolveModalOpen(record.id)}
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          상세해제
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -424,20 +440,36 @@ export default function AssetsPage() {
             {/* 상태 변경 */}
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900 mb-4">상태 변경</h3>
-              <div className="flex gap-3">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="flex space-x-6">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        value="active"
+                        checked={selectedStatus === 'active'}
+                        onChange={(e) => setSelectedStatus(e.target.value as 'active')}
+                        className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-900">정상가동</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        value="inactive"
+                        checked={selectedStatus === 'inactive'}
+                        onChange={(e) => setSelectedStatus(e.target.value as 'inactive')}
+                        className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-900">비가동</span>
+                    </label>
+                  </div>
+                </div>
                 <button
-                  onClick={() => handleStatusChange('active')}
-                  disabled={selectedUnit.status === 'active'}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleStatusChange}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  정상가동
-                </button>
-                <button
-                  onClick={() => handleStatusChange('inactive')}
-                  disabled={selectedUnit.status === 'inactive'}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  비가동
+                  상태 변경 적용
                 </button>
               </div>
             </div>
@@ -638,18 +670,18 @@ export default function AssetsPage() {
               
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  완료 내역 및 비고사항 <span className="text-red-500">*</span>
+                  완료 내역 및 비고사항 (선택사항)
                 </label>
                 <textarea
                   value={resolveNotes}
                   onChange={(e) => setResolveNotes(e.target.value)}
-                  placeholder="예: 팬모터 교체 완료, 냉매 보충으로 누출 문제 해결, 압축기 정상 작동 확인 등..."
+                  placeholder="예: 팬모터 교체 완료, 냉매 보충으로 누출 문제 해결, 압축기 정상 작동 확인 등... (선택사항)"
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   disabled={isSubmitting}
                 />
                 <p className="mt-2 text-sm text-gray-600">
-                  📝 <strong>필수입력:</strong> 보수 완료 내역을 입력해주세요. 향후 이력 관리 및 패턴 분석에 활용됩니다.
+                  📝 자세한 해제 내역을 입력하시면 향후 이력 관리 및 패턴 분석에 도움이 됩니다.
                 </p>
               </div>
 
@@ -663,7 +695,7 @@ export default function AssetsPage() {
                 </button>
                 <button
                   onClick={handleResolveSubmit}
-                  disabled={isSubmitting || !resolveNotes.trim()}
+                  disabled={isSubmitting}
                   className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? '처리중...' : '완료 처리'}

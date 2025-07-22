@@ -15,7 +15,7 @@ export default function AddOutdoorUnitPage() {
     serialNumber: '',
     installationDate: '',
     location: '',
-    capacity: 0,
+    factoryName: '',
     status: 'active',
     lastMaintenanceDate: '',
     nextMaintenanceDate: '',
@@ -26,7 +26,7 @@ export default function AddOutdoorUnitPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'capacity' ? parseFloat(value) || 0 : value
+      [name]: value
     }));
   };
 
@@ -63,7 +63,7 @@ export default function AddOutdoorUnitPage() {
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">새 실외기 등록</h1>
+              <h1 className="text-2xl font-bold text-gray-900">새 장비 등록</h1>
               <Link
                 href="/assets"
                 className="text-gray-500 hover:text-gray-700"
@@ -78,7 +78,7 @@ export default function AddOutdoorUnitPage() {
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    실외기 명칭 *
+                    장비명 *
                   </label>
                   <input
                     type="text"
@@ -88,7 +88,7 @@ export default function AddOutdoorUnitPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="예: 본관 1층 실외기"
+                    placeholder="예: AHU-H1-1호-CDU1"
                   />
                 </div>
 
@@ -141,21 +141,25 @@ export default function AddOutdoorUnitPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">
-                    냉방 용량 (kW) *
+                  <label htmlFor="factoryName" className="block text-sm font-medium text-gray-700">
+                    소재지 *
                   </label>
-                  <input
-                    type="number"
-                    name="capacity"
-                    id="capacity"
+                  <select
+                    name="factoryName"
+                    id="factoryName"
                     required
-                    min="0"
-                    step="0.1"
-                    value={formData.capacity}
+                    value={formData.factoryName}
                     onChange={handleInputChange}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="예: 24.0"
-                  />
+                  >
+                    <option value="">소재지를 선택하세요</option>
+                    <option value="IT소재3공장">IT소재3공장</option>
+                    <option value="IT소재6공장">IT소재6공장</option>
+                    <option value="IT소재7공장">IT소재7공장</option>
+                    <option value="IT소재8공장">IT소재8공장</option>
+                    <option value="IT소재9공장">IT소재9공장</option>
+                    <option value="부설연구소">부설연구소</option>
+                  </select>
                 </div>
 
                 <div>
@@ -222,17 +226,16 @@ export default function AddOutdoorUnitPage() {
 
               <div>
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                  설치 위치 *
+                  위치
                 </label>
                 <input
                   type="text"
                   name="location"
                   id="location"
-                  required
                   value={formData.location}
                   onChange={handleInputChange}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="예: 본관 옥상 동쪽"
+                  placeholder="예: H1, 옥외, 4층 옥상"
                 />
               </div>
 
@@ -263,7 +266,7 @@ export default function AddOutdoorUnitPage() {
                   disabled={isLoading}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  {isLoading ? '등록 중...' : '실외기 등록'}
+                  {isLoading ? '등록 중...' : '장비 등록'}
                 </button>
               </div>
             </form>

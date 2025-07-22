@@ -1,0 +1,4 @@
+Vercel Deployment Retry After Time Reset
+Timestamp: 2025-07-22 13:04:00 KST
+Status: Resource limit should be reset after 17+ hours
+Retry: Attempt new deployment with fresh commit

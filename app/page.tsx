@@ -14,11 +14,21 @@ export default function Home() {
     setIsLoading(true);
     setError('');
 
-    // 하드코딩된 인증 정보 확인
-    if (credentials.username === 'lgchem' && credentials.password === '232576') {
+    // 사용자 계정 정보
+    const users = {
+      'jhpark24': { password: '232576', name: '박제현 책임' },
+      'seokhyeon-j': { password: '232937', name: '장석현 책임' },
+      'chan8735': { password: '232113', name: '이찬희 선임' },
+      'jsc1500': { password: '226401', name: '지석철 선임' }
+    };
+
+    // 인증 확인
+    const user = users[credentials.username as keyof typeof users];
+    if (user && user.password === credentials.password) {
       // 로그인 성공 - 세션 저장
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('loginTime', new Date().toISOString());
+      localStorage.setItem('userInfo', JSON.stringify({ id: credentials.username, name: user.name }));
       
       // 실외기 관리 페이지로 리다이렉트
       router.push('/assets');

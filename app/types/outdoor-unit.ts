@@ -19,13 +19,13 @@ export interface MaintenanceRecord {
 
 export interface OutdoorUnit {
   id: string;
-  name: string;
+  name: string; // 장비명
   model: string;
   manufacturer: string;
   serialNumber: string;
   installationDate: string;
-  location: string;
-  capacity: number; // 냉방 용량 (kW)
+  location: string; // 위치
+  factoryName: string; // 소재지 (공장명)
   status: 'active' | 'maintenance' | 'inactive';
   lastMaintenanceDate?: string;
   nextMaintenanceDate?: string;
@@ -36,13 +36,13 @@ export interface OutdoorUnit {
 }
 
 export interface CreateOutdoorUnitRequest {
-  name: string;
+  name: string; // 장비명
   model: string;
   manufacturer: string;
   serialNumber: string;
   installationDate: string;
-  location: string;
-  capacity: number;
+  location: string; // 위치
+  factoryName: string; // 소재지 (공장명)
   status: 'active' | 'maintenance' | 'inactive';
   lastMaintenanceDate?: string;
   nextMaintenanceDate?: string;

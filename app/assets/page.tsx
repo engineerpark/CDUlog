@@ -65,7 +65,7 @@ export default function AssetsPage() {
     
     if (factoryFilter !== 'all') {
       filtered = filtered.filter(unit => 
-        factoryFilter === '1공장' ? unit.name.includes('1공장') : unit.name.includes('3공장')
+        unit.factoryName && unit.factoryName.includes(factoryFilter)
       );
     }
     
@@ -219,10 +219,14 @@ export default function AssetsPage() {
     setIsSubmitting(true);
     
     try {
+      const currentUser = getCurrentUser();
+      const resolvedByName = currentUser ? currentUser.name : 'LG Chem 현장작업자';
+      
       console.log('Resolving maintenance record:', {
         recordId,
         notes,
-        unitId: selectedUnit.id
+        unitId: selectedUnit.id,
+        resolvedBy: resolvedByName
       });
       
       const response = await fetch(`/api/maintenance-records/${recordId}`, {
@@ -232,7 +236,7 @@ export default function AssetsPage() {
         },
         body: JSON.stringify({
           isActive: false,
-          resolvedBy: 'LG Chem 현장작업자',
+          resolvedBy: resolvedByName,
           resolvedNotes: notes || ''
         }),
       });
@@ -343,10 +347,10 @@ export default function AssetsPage() {
     }
   };
 
-  const getFactoryName = (unitName: string) => {
-    if (unitName.includes('1공장')) return '1공장';
-    if (unitName.includes('3공장')) return '3공장';
-    return '공장';
+  // 현재 로그인한 사용자 정보 가져오기
+  const getCurrentUser = () => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo) : null;
   };
 
   if (!isLoggedIn || isLoading) {
@@ -372,7 +376,7 @@ export default function AssetsPage() {
             <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
               <div className="text-white">
                 <h2 className="text-xl font-bold">{selectedUnit.name}</h2>
-                <p className="text-blue-100">{getFactoryName(selectedUnit.name)} | {selectedUnit.capacity}kW</p>
+                <p className="text-blue-100">{selectedUnit.factoryName} | {selectedUnit.location || '위치 미정'}</p>
               </div>
               <button
                 onClick={() => setSelectedUnit(null)}
@@ -638,8 +642,12 @@ export default function AssetsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">전체 공장</option>
-                <option value="1공장">1공장</option>
-                <option value="3공장">3공장</option>
+                <option value="IT소재3공장">IT소재3공장</option>
+                <option value="IT소재6공장">IT소재6공장</option>
+                <option value="IT소재7공장">IT소재7공장</option>
+                <option value="IT소재8공장">IT소재8공장</option>
+                <option value="IT소재9공장">IT소재9공장</option>
+                <option value="부설연구소">부설연구소</option>
               </select>
             </div>
             <div>
@@ -677,13 +685,13 @@ export default function AssetsPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      공장명
+                      소재지
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      설비명
+                      장비명
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      용량 (kW)
+                      위치
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       점검상태
@@ -701,13 +709,13 @@ export default function AssetsPage() {
                       className="hover:bg-blue-50 cursor-pointer"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {getFactoryName(unit.name)}
+                        {unit.factoryName || '미지정'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {unit.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {unit.capacity}
+                        {unit.location || '미지정'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(unit.status)}

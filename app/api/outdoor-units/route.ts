@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const body: CreateOutdoorUnitRequest = await request.json();
     
     // 유효성 검사
-    const requiredFields = ['name', 'model', 'manufacturer', 'serialNumber', 'installationDate', 'location', 'capacity'];
+    const requiredFields = ['name', 'model', 'manufacturer', 'serialNumber', 'installationDate', 'location', 'factoryName'];
     const missingFields = requiredFields.filter(field => !body[field as keyof CreateOutdoorUnitRequest]);
     
     if (missingFields.length > 0) {

@@ -1,6 +1,6 @@
 {
   "name": "cdulog",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "실외기 유지보수 관리 시스템",
   "private": true,
   "scripts": {
@@ -31,7 +31,12 @@
     "node": ">=18.17.0",
     "npm": ">=9.0.0"
   },
-  "keywords": ["nextjs", "react", "maintenance", "outdoor-units"],
+  "keywords": [
+    "nextjs",
+    "react",
+    "maintenance",
+    "outdoor-units"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/engineerpark/CDUlog.git"

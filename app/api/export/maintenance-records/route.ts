@@ -18,13 +18,12 @@ export async function GET(request: NextRequest) {
 
     // CSV 헤더
     const headers = [
-      '공장명',
-      '설비명', 
+      '소재지',
+      '장비명', 
       '제조사',
       '모델명',
       '시리얼번호',
-      '용량(kW)',
-      '설치위치',
+      '위치',
       '현재상태',
       '보수항목',
       '보수유형',
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // 각 실외기별로 보수 기록과 함께 처리
     for (const unit of outdoorUnits) {
-      const factoryName = unit.name.includes('1공장') ? '1공장' : unit.name.includes('3공장') ? '3공장' : '공장';
+      const factoryName = unit.factoryName || '미지정';
       const statusLabel = unit.status === 'active' ? '정상가동' : 
                          unit.status === 'maintenance' ? '보수필요' : '비가동';
       
@@ -57,8 +56,7 @@ export async function GET(request: NextRequest) {
           unit.manufacturer,
           unit.model,
           unit.serialNumber,
-          unit.capacity.toString(),
-          unit.location,
+          unit.location || '미지정',
           statusLabel,
           '',  // 보수항목
           '',  // 보수유형
@@ -84,8 +82,7 @@ export async function GET(request: NextRequest) {
             unit.manufacturer,
             unit.model,
             unit.serialNumber,
-            unit.capacity.toString(),
-            unit.location,
+            unit.location || '미지정',
             statusLabel,
             record.description,
             maintenanceTypeLabel,

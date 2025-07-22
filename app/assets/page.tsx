@@ -29,6 +29,10 @@ export default function AssetsPage() {
   const [resolveNotes, setResolveNotes] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<'active' | 'inactive'>('active');
   
+  // 인라인 내역 작성 상태
+  const [inlineEditingRecord, setInlineEditingRecord] = useState<string | null>(null);
+  const [inlineNotes, setInlineNotes] = useState<{[key: string]: string}>({});
+  
   // 필터 상태
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -266,6 +270,35 @@ export default function AssetsPage() {
     setResolveNotes('');
   };
 
+  const handleInlineEditToggle = (recordId: string) => {
+    if (inlineEditingRecord === recordId) {
+      setInlineEditingRecord(null);
+      setInlineNotes(prev => {
+        const newNotes = { ...prev };
+        delete newNotes[recordId];
+        return newNotes;
+      });
+    } else {
+      setInlineEditingRecord(recordId);
+      setInlineNotes(prev => ({ ...prev, [recordId]: '' }));
+    }
+  };
+
+  const handleInlineNotesChange = (recordId: string, value: string) => {
+    setInlineNotes(prev => ({ ...prev, [recordId]: value }));
+  };
+
+  const handleInlineResolveSubmit = async (recordId: string) => {
+    const notes = inlineNotes[recordId] || '';
+    await handleMaintenanceRecordResolve(recordId, notes);
+    setInlineEditingRecord(null);
+    setInlineNotes(prev => {
+      const newNotes = { ...prev };
+      delete newNotes[recordId];
+      return newNotes;
+    });
+  };
+
   const handleResolveModalClose = () => {
     setShowResolveModal(false);
     setSelectedRecordForResolve(null);
@@ -377,29 +410,66 @@ export default function AssetsPage() {
             {maintenanceRecords.length > 0 && (
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">현재 보수 항목</h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {maintenanceRecords.map((record) => (
-                    <div key={record.id} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900">{record.description}</div>
-                        <div className="text-sm text-gray-500">
-                          입력: {new Date(record.createdAt).toLocaleDateString('ko-KR')} {new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                    <div key={record.id} className="bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center justify-between p-3">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{record.description}</div>
+                          <div className="text-sm text-gray-500">
+                            입력: {new Date(record.createdAt).toLocaleDateString('ko-KR')} {new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleMaintenanceRecordResolve(record.id, '기본 해제')}
+                            className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                          >
+                            해제
+                          </button>
+                          <button
+                            onClick={() => handleInlineEditToggle(record.id)}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          >
+                            {inlineEditingRecord === record.id ? '취소' : '내역작성'}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleMaintenanceRecordResolve(record.id, '기본 해제')}
-                          className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
-                        >
-                          해제
-                        </button>
-                        <button
-                          onClick={() => handleResolveModalOpen(record.id)}
-                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                        >
-                          내역작성
-                        </button>
-                      </div>
+                      
+                      {/* 인라인 편집 영역 */}
+                      {inlineEditingRecord === record.id && (
+                        <div className="px-3 pb-3 border-t border-yellow-300">
+                          <div className="mt-3 space-y-3">
+                            <label className="block text-sm font-medium text-gray-700">
+                              완료 내역 및 비고사항
+                            </label>
+                            <textarea
+                              value={inlineNotes[record.id] || ''}
+                              onChange={(e) => handleInlineNotesChange(record.id, e.target.value)}
+                              placeholder="예: 팬모터 교체 완료, 냉매 보충으로 누출 문제 해결, 압축기 정상 작동 확인 등..."
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              disabled={isSubmitting}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => handleInlineEditToggle(record.id)}
+                                disabled={isSubmitting}
+                                className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+                              >
+                                취소
+                              </button>
+                              <button
+                                onClick={() => handleInlineResolveSubmit(record.id)}
+                                disabled={isSubmitting}
+                                className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
+                              >
+                                {isSubmitting ? '처리중...' : '완료처리'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

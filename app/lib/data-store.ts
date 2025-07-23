@@ -23,13 +23,13 @@ export const initializeSampleData = () => {
   const now = new Date().toISOString();
   const manufacturers = ['LG전자', '삼성전자', '대우전자', '캐리어', 'LG케미드'];
   const models = ['AC-2400X', 'AW-3600Y', 'CU-4800Z', 'DX-1800W', 'AHU-1000', 'DHU-2000', 'CDU-3000'];
-  const statuses: ('active' | 'maintenance' | 'inactive')[] = ['active', 'maintenance', 'inactive'];
+  // 모든 장비를 정상가동으로 초기화
+  const status = 'active';
 
   // CSV 데이터 기반으로 실외기 데이터 생성
   csvData.forEach((item, index) => {
     const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
     const model = models[Math.floor(Math.random() * models.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
     
     const installDate = new Date(2019 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1);
     const lastMaintenanceDate = new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1);
@@ -73,8 +73,8 @@ export const calculateUnitStatus = (unitId: string): 'active' | 'maintenance' | 
     return 'inactive';
   }
   
-  // 활성 보수 항목이 있으면 보수필요
-  if (activeMaintenanceRecords.length > 0) {
+  // 활성 보수 항목이 1개 이상 있으면 보수필요
+  if (activeMaintenanceRecords.length >= 1) {
     return 'maintenance';
   }
   

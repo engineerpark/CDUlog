@@ -10,9 +10,6 @@ export default function AddOutdoorUnitPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<CreateOutdoorUnitRequest>({
     name: '',
-    model: '',
-    manufacturer: '',
-    serialNumber: '',
     installationDate: '',
     location: '',
     factoryName: '',
@@ -92,53 +89,6 @@ export default function AddOutdoorUnitPage() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700">
-                    제조사 *
-                  </label>
-                  <input
-                    type="text"
-                    name="manufacturer"
-                    id="manufacturer"
-                    required
-                    value={formData.manufacturer}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="예: LG전자, 삼성전자"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="model" className="block text-sm font-medium text-gray-700">
-                    모델명 *
-                  </label>
-                  <input
-                    type="text"
-                    name="model"
-                    id="model"
-                    required
-                    value={formData.model}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="예: AC-2400X"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="serialNumber" className="block text-sm font-medium text-gray-700">
-                    시리얼 번호 *
-                  </label>
-                  <input
-                    type="text"
-                    name="serialNumber"
-                    id="serialNumber"
-                    required
-                    value={formData.serialNumber}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="예: SN2024001"
-                  />
-                </div>
 
                 <div>
                   <label htmlFor="factoryName" className="block text-sm font-medium text-gray-700">

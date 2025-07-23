@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const body: CreateOutdoorUnitRequest = await request.json();
     
     // 유효성 검사
-    const requiredFields = ['name', 'model', 'manufacturer', 'serialNumber', 'installationDate', 'location', 'factoryName'];
+    const requiredFields = ['name', 'installationDate', 'location', 'factoryName'];
     const missingFields = requiredFields.filter(field => !body[field as keyof CreateOutdoorUnitRequest]);
     
     if (missingFields.length > 0) {
@@ -35,18 +35,6 @@ export async function POST(request: NextRequest) {
           error: `Missing required fields: ${missingFields.join(', ')}` 
         },
         { status: 400 }
-      );
-    }
-
-    // 시리얼 번호 중복 검사
-    const existingUnit = outdoorUnits.find(unit => unit.serialNumber === body.serialNumber);
-    if (existingUnit) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Serial number already exists' 
-        },
-        { status: 409 }
       );
     }
 

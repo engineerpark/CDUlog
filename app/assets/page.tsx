@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import { OutdoorUnit, CreateMaintenanceRecordRequest, MaintenanceRecord } from '../types/outdoor-unit';
 
 const PRESET_ISSUES = [
-  { id: 'refrigerant_leak', label: '냉매 LEAK', description: '냉매 누출 발견', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
-  { id: 'fan_motor_replacement', label: '팬모터 교체 필요', description: '팬모터 교체가 필요한 상태', color: 'bg-orange-100 text-orange-800 hover:bg-orange-200' },
-  { id: 'compressor_replacement', label: '압축기 교체 필요', description: '압축기 교체가 필요한 상태', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' }
+  { id: 'refrigerant_leak', label: '냉매배관누설', description: '냉매배관 누설로 인한 냉매 부족', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
+  { id: 'fan_motor_replacement', label: '팬모터 교체', description: '팬모터 고장으로 인한 교체 필요', color: 'bg-orange-100 text-orange-800 hover:bg-orange-200' },
+  { id: 'filter_dryer_replacement', label: '필터드라이어 교체', description: '필터드라이어 교체 필요', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
+  { id: 'compressor_replacement', label: '압축기 교체', description: '압축기 고장으로 인한 교체 필요', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
+  { id: 'expansion_valve_replacement', label: '팽창밸브 교체', description: '팽창밸브 교체 필요', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
+  { id: 'refrigerant_refill', label: '냉매 충진', description: '냉매 부족으로 인한 냉매 충진', color: 'bg-purple-100 text-purple-800 hover:bg-purple-200' }
 ];
 
 export default function AssetsPage() {
@@ -390,18 +393,10 @@ export default function AssetsPage() {
 
             {/* 설비 정보 */}
             <div className="p-6 border-b border-gray-200">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">제조사</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedUnit.manufacturer}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">모델명</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedUnit.model}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">시리얼 번호</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedUnit.serialNumber}</p>
+                  <label className="block text-sm font-medium text-gray-500">설치일자</label>
+                  <p className="mt-1 text-sm text-gray-900">{new Date(selectedUnit.installationDate).toLocaleDateString('ko-KR')}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">현재 상태</label>

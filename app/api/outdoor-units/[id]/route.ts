@@ -52,21 +52,6 @@ export async function PUT(
       );
     }
 
-    // 시리얼 번호 중복 검사 (자신 제외)
-    if (body.serialNumber) {
-      const existingUnit = outdoorUnits.find(
-        unit => unit.serialNumber === body.serialNumber && unit.id !== id
-      );
-      if (existingUnit) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Serial number already exists' 
-          },
-          { status: 409 }
-        );
-      }
-    }
 
     const updatedUnit = {
       ...outdoorUnits[unitIndex],

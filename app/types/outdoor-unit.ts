@@ -20,9 +20,6 @@ export interface MaintenanceRecord {
 export interface OutdoorUnit {
   id: string;
   name: string; // 장비명
-  model: string;
-  manufacturer: string;
-  serialNumber: string;
   installationDate: string;
   location: string; // 위치
   factoryName: string; // 소재지 (공장명)
@@ -37,9 +34,6 @@ export interface OutdoorUnit {
 
 export interface CreateOutdoorUnitRequest {
   name: string; // 장비명
-  model: string;
-  manufacturer: string;
-  serialNumber: string;
   installationDate: string;
   location: string; // 위치
   factoryName: string; // 소재지 (공장명)

@@ -34,9 +34,6 @@ export const initializeSampleData = () => {
     outdoorUnits.push({
       id: nextUnitId.toString(),
       name: item.name,
-      model: '일반형',
-      manufacturer: '표준',
-      serialNumber: `UNIT-${nextUnitId.toString().padStart(4, '0')}`,
       installationDate: installDate.toISOString().split('T')[0],
       location: item.location || '미지정',
       factoryName: item.factoryName,

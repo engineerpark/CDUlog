@@ -16,87 +16,54 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // CSV 헤더
-    const headers = [
-      '소재지',
-      '장비명', 
-      '제조사',
-      '모델명',
-      '시리얼번호',
-      '위치',
-      '현재상태',
-      '보수항목',
-      '보수유형',
-      '보수일자',
-      '작업자',
-      '상태',
-      '해제일자',
-      '해제작업자',
-      '해제내역',
-      '비고'
-    ];
-
+    // 날짜별로 보수 기록을 그룹화
+    const maintenanceByDate: { [date: string]: { [unitName: string]: string[] } } = {};
+    
+    // 모든 보수 기록을 날짜별로 정리
+    for (const record of maintenanceRecords) {
+      const unit = outdoorUnits.find(u => u.id === record.outdoorUnitId);
+      if (!unit) continue;
+      
+      const date = record.maintenanceDate;
+      const unitName = `${unit.factoryName}_${unit.name}`;
+      const maintenanceInfo = `${record.description} (${record.performedBy})`;
+      
+      if (!maintenanceByDate[date]) {
+        maintenanceByDate[date] = {};
+      }
+      
+      if (!maintenanceByDate[date][unitName]) {
+        maintenanceByDate[date][unitName] = [];
+      }
+      
+      maintenanceByDate[date][unitName].push(maintenanceInfo);
+    }
+    
+    // 모든 장비명 수집 (소재지_장비명 형식)
+    const allUnitNames = outdoorUnits.map(unit => `${unit.factoryName}_${unit.name}`);
+    const uniqueUnitNames = [...new Set(allUnitNames)].sort();
+    
+    // CSV 헤더 생성 (날짜, 장비명들...)
+    const headers = ['날짜', ...uniqueUnitNames];
+    
     // CSV 데이터 생성
     const csvRows = [];
     csvRows.push(headers.join(','));
-
-    // 각 실외기별로 보수 기록과 함께 처리
-    for (const unit of outdoorUnits) {
-      const factoryName = unit.factoryName || '미지정';
-      const statusLabel = unit.status === 'active' ? '정상가동' : 
-                         unit.status === 'maintenance' ? '보수필요' : '비가동';
+    
+    // 날짜별로 행 생성
+    const sortedDates = Object.keys(maintenanceByDate).sort();
+    
+    for (const date of sortedDates) {
+      const row = [date];
       
-      const unitRecords = maintenanceRecords.filter(record => record.outdoorUnitId === unit.id);
-      
-      if (unitRecords.length === 0) {
-        // 보수 기록이 없는 경우도 기본 설비 정보만 포함
-        const row = [
-          factoryName,
-          unit.name,
-          unit.manufacturer,
-          unit.model,
-          unit.serialNumber,
-          unit.location || '미지정',
-          statusLabel,
-          '',  // 보수항목
-          '',  // 보수유형
-          '',  // 보수일자
-          '',  // 작업자
-          '',  // 상태
-          '',  // 해제일자
-          '',  // 해제작업자
-          '',  // 해제내역
-          unit.notes || ''  // 비고
-        ];
-        csvRows.push(row.map(field => `"${field}"`).join(','));
-      } else {
-        // 보수 기록이 있는 경우 각 기록별로 행 생성
-        for (const record of unitRecords) {
-          const maintenanceTypeLabel = record.maintenanceType === 'preventive' ? '예방정비' :
-                                      record.maintenanceType === 'corrective' ? '수리정비' : '긴급정비';
-          const recordStatusLabel = record.isActive ? '진행중' : '완료';
-          
-          const row = [
-            factoryName,
-            unit.name,
-            unit.manufacturer,
-            unit.model,
-            unit.serialNumber,
-            unit.location || '미지정',
-            statusLabel,
-            record.description,
-            maintenanceTypeLabel,
-            record.maintenanceDate,
-            record.performedBy,
-            recordStatusLabel,
-            record.resolvedDate || '',
-            record.resolvedBy || '',
-            record.resolvedNotes || '',
-            record.notes || ''
-          ];
-          csvRows.push(row.map(field => `"${field}"`).join(','));
-        }
+      // 각 장비명에 대해 해당 날짜의 보수 기록 확인
+      for (const unitName of uniqueUnitNames) {
+        const maintenanceInfos = maintenanceByDate[date][unitName] || [];
+        const cellContent = maintenanceInfos.join('; ');
+        row.push(cellContent);
       }
+      
+      csvRows.push(row.map(field => `"${field}"`).join(','));
     }
 
     const csvContent = csvRows.join('\n');

@@ -44,6 +44,9 @@ export default function AssetsPage() {
   // 장비명 편집 상태 (관리자 전용)
   const [isEditingUnitName, setIsEditingUnitName] = useState(false);
   const [editingUnitName, setEditingUnitName] = useState<string>('');
+  
+  // 문의사항 모달 상태
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     // 로그인 확인
@@ -704,8 +707,14 @@ export default function AssetsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">LG Chem 실외기 관리 시스템</h1>
+          <h1 className="text-2xl font-bold text-gray-900">LG화학 청주공장 실외기 유지보수 관리 시스템</h1>
           <div className="flex gap-3">
+            <button
+              onClick={() => setShowContactModal(true)}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              문의사항
+            </button>
             <button
               onClick={handleCSVDownload}
               className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -732,11 +741,11 @@ export default function AssetsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">전체 공장</option>
-                <option value="IT소재3공장">IT소재3공장</option>
-                <option value="IT소재6공장">IT소재6공장</option>
-                <option value="IT소재7공장">IT소재7공장</option>
-                <option value="IT소재8공장">IT소재8공장</option>
-                <option value="IT소재9공장">IT소재9공장</option>
+                <option value="전자소재3공장">전자소재3공장</option>
+                <option value="전자소재6공장">전자소재6공장</option>
+                <option value="전자소재7공장">전자소재7공장</option>
+                <option value="전자소재8공장">전자소재8공장</option>
+                <option value="전자소재9공장">전자소재9공장</option>
                 <option value="부설연구소">부설연구소</option>
               </select>
             </div>
@@ -869,6 +878,55 @@ export default function AssetsPage() {
                   {isSubmitting ? '처리중...' : '완료 처리'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 문의사항 모달 */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">문의사항</h3>
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">부서</label>
+                  <p className="mt-1 text-sm text-gray-900">청주설비기술1팀</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">담당자</label>
+                  <p className="mt-1 text-sm text-gray-900">박제현 책임</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">이메일</label>
+                  <p className="mt-1 text-sm text-blue-600">
+                    <a href="mailto:jhpark24@lgchem.com">jhpark24@lgchem.com</a>
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">연락처</label>
+                  <p className="mt-1 text-sm text-gray-900">010-4753-3666</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                확인
+              </button>
             </div>
           </div>
         </div>

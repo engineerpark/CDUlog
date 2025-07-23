@@ -52,7 +52,7 @@ export default function Home() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            실외기 유지보수 관리 시스템
+            LG화학 청주공장 실외기 유지보수 관리 시스템
           </h1>
           <p className="text-gray-600">
             LG Chem 현장 관리용 시스템
@@ -123,7 +123,7 @@ export default function Home() {
         </div>
 
         <div className="text-center text-sm text-gray-500">
-          <p>© 2025 LG Chem. 현장 관리 시스템</p>
+          <p>청주설비기술1팀</p>
         </div>
       </div>
     </div>

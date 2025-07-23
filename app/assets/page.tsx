@@ -23,6 +23,7 @@ export default function AssetsPage() {
   const [customInput, setCustomInput] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string>('user');
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   
@@ -39,6 +40,10 @@ export default function AssetsPage() {
   // 필터 상태
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // 장비명 편집 상태 (관리자 전용)
+  const [isEditingUnitName, setIsEditingUnitName] = useState(false);
+  const [editingUnitName, setEditingUnitName] = useState<string>('');
 
   useEffect(() => {
     // 로그인 확인
@@ -46,6 +51,11 @@ export default function AssetsPage() {
       const loggedIn = localStorage.getItem('isLoggedIn');
       if (loggedIn === 'true') {
         setIsLoggedIn(true);
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+          const userData = JSON.parse(userInfo);
+          setUserRole(userData.role || 'user');
+        }
         fetchOutdoorUnits();
       } else {
         router.push('/');
@@ -356,6 +366,52 @@ export default function AssetsPage() {
     return userInfo ? JSON.parse(userInfo) : null;
   };
 
+  // 관리자 전용: 장비명 편집 함수
+  const handleEditUnitName = () => {
+    if (userRole !== 'admin' || !selectedUnit) return;
+    setIsEditingUnitName(true);
+    setEditingUnitName(selectedUnit.name);
+  };
+
+  const handleSaveUnitName = async () => {
+    if (!selectedUnit || !editingUnitName.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/outdoor-units/${selectedUnit.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editingUnitName.trim()
+        }),
+      });
+
+      if (response.ok) {
+        // 성공 시 목록 새로고침
+        await fetchOutdoorUnits();
+        setIsEditingUnitName(false);
+        setEditingUnitName('');
+        setError('장비명이 성공적으로 변경되었습니다.');
+        
+        // 3초 후 성공 메시지 제거
+        setTimeout(() => setError(null), 3000);
+        
+        // 선택된 유닛 이름 업데이트
+        setSelectedUnit(prev => prev ? { ...prev, name: editingUnitName.trim() } : null);
+      } else {
+        setError('장비명 변경에 실패했습니다.');
+      }
+    } catch {
+      setError('네트워크 오류가 발생했습니다.');
+    }
+  };
+
+  const handleCancelEditUnitName = () => {
+    setIsEditingUnitName(false);
+    setEditingUnitName('');
+  };
+
   if (!isLoggedIn || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
@@ -377,8 +433,51 @@ export default function AssetsPage() {
           <div className="bg-white shadow-lg rounded-lg overflow-hidden">
             {/* 헤더 */}
             <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
-              <div className="text-white">
-                <h2 className="text-xl font-bold">{selectedUnit.name}</h2>
+              <div className="text-white flex-1">
+                {isEditingUnitName ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editingUnitName}
+                      onChange={(e) => setEditingUnitName(e.target.value)}
+                      className="text-xl font-bold bg-white text-gray-900 px-2 py-1 rounded"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveUnitName}
+                      className="text-green-200 hover:text-white"
+                      title="저장"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={handleCancelEditUnitName}
+                      className="text-red-200 hover:text-white"
+                      title="취소"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold">{selectedUnit.name}</h2>
+                    {userRole === 'admin' && (
+                      <button
+                        onClick={handleEditUnitName}
+                        className="text-blue-200 hover:text-white"
+                        title="장비명 편집 (관리자 전용)"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
                 <p className="text-blue-100">{selectedUnit.factoryName} | {selectedUnit.location || '위치 미정'}</p>
               </div>
               <button
@@ -393,11 +492,7 @@ export default function AssetsPage() {
 
             {/* 설비 정보 */}
             <div className="p-6 border-b border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">설치일자</label>
-                  <p className="mt-1 text-sm text-gray-900">{new Date(selectedUnit.installationDate).toLocaleDateString('ko-KR')}</p>
-                </div>
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500">현재 상태</label>
                   <div className="mt-1">{getStatusBadge(selectedUnit.status)}</div>

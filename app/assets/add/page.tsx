@@ -103,11 +103,11 @@ export default function AddOutdoorUnitPage() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   >
                     <option value="">소재지를 선택하세요</option>
-                    <option value="IT소재3공장">IT소재3공장</option>
-                    <option value="IT소재6공장">IT소재6공장</option>
-                    <option value="IT소재7공장">IT소재7공장</option>
-                    <option value="IT소재8공장">IT소재8공장</option>
-                    <option value="IT소재9공장">IT소재9공장</option>
+                    <option value="전자소재3공장">전자소재3공장</option>
+                    <option value="전자소재6공장">전자소재6공장</option>
+                    <option value="전자소재7공장">전자소재7공장</option>
+                    <option value="전자소재8공장">전자소재8공장</option>
+                    <option value="전자소재9공장">전자소재9공장</option>
                     <option value="부설연구소">부설연구소</option>
                   </select>
                 </div>

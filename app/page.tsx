@@ -16,10 +16,12 @@ export default function Home() {
 
     // 사용자 계정 정보
     const users = {
-      'jhpark24': { password: '232576', name: '박제현 책임' },
-      'seokhyeon-j': { password: '232937', name: '장석현 책임' },
-      'chan8735': { password: '232113', name: '이찬희 선임' },
-      'jsc1500': { password: '226401', name: '지석철 선임' }
+      'jhpark24': { password: '232576', name: '박제현 책임', role: 'admin' },
+      'seokhyeon-j': { password: '232937', name: '장석현 책임', role: 'user' },
+      'chan8735': { password: '232113', name: '이찬희 선임', role: 'user' },
+      'jsc1500': { password: '226401', name: '지석철 선임', role: 'user' },
+      'himsolutek': { password: '54031582', name: '힘솔루텍', role: 'user' },
+      'lgchem': { password: '232576', name: 'LG화학', role: 'user' }
     };
 
     // 인증 확인
@@ -28,7 +30,7 @@ export default function Home() {
       // 로그인 성공 - 세션 저장
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('loginTime', new Date().toISOString());
-      localStorage.setItem('userInfo', JSON.stringify({ id: credentials.username, name: user.name }));
+      localStorage.setItem('userInfo', JSON.stringify({ id: credentials.username, name: user.name, role: user.role }));
       
       // 실외기 관리 페이지로 리다이렉트
       router.push('/assets');

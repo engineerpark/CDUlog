@@ -21,16 +21,12 @@ export const initializeSampleData = () => {
   nextMaintenanceId = 1;
   
   const now = new Date().toISOString();
-  const manufacturers = ['LG전자', '삼성전자', '대우전자', '캐리어', 'LG케미드'];
-  const models = ['AC-2400X', 'AW-3600Y', 'CU-4800Z', 'DX-1800W', 'AHU-1000', 'DHU-2000', 'CDU-3000'];
+  // 외부업체 점검을 위해 민감한 정보 제거 (제조사, 모델명, 시리얼번호)
   // 모든 장비를 정상가동으로 초기화
   const status = 'active';
 
   // CSV 데이터 기반으로 실외기 데이터 생성
   csvData.forEach((item, index) => {
-    const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
-    const model = models[Math.floor(Math.random() * models.length)];
-    
     const installDate = new Date(2019 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1);
     const lastMaintenanceDate = new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1);
     const nextMaintenanceDate = new Date(lastMaintenanceDate.getTime() + (90 * 24 * 60 * 60 * 1000)); // 90일 후
@@ -38,9 +34,9 @@ export const initializeSampleData = () => {
     outdoorUnits.push({
       id: nextUnitId.toString(),
       name: item.name,
-      model,
-      manufacturer,
-      serialNumber: `${item.factoryName.slice(-3)}${nextUnitId.toString().padStart(4, '0')}`,
+      model: '일반형',
+      manufacturer: '표준',
+      serialNumber: `UNIT-${nextUnitId.toString().padStart(4, '0')}`,
       installationDate: installDate.toISOString().split('T')[0],
       location: item.location || '미지정',
       factoryName: item.factoryName,
@@ -73,12 +69,12 @@ export const calculateUnitStatus = (unitId: string): 'active' | 'maintenance' | 
     return 'inactive';
   }
   
-  // 활성 보수 항목이 1개 이상 있으면 보수필요
-  if (activeMaintenanceRecords.length >= 1) {
+  // 보수 항목이 1개라도 있으면 보수필요, 0개가 되면 다시 정상가동
+  if (activeMaintenanceRecords.length > 0) {
     return 'maintenance';
   }
   
-  // 그 외에는 정상가동
+  // 보수 항목이 0개이면 정상가동
   return 'active';
 };
 

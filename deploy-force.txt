@@ -1,1 +1,1 @@
-Force deploy trigger - #오후
+Force deploy for v1.0.12 - #오후

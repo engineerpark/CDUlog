@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateMaintenanceRecordRequest } from '../../types/outdoor-unit';
-import { maintenanceRecords, getNextMaintenanceId, addMaintenanceRecord, loadFromLocalStorage } from '../../lib/data-store';
+import { maintenanceRecords, getNextMaintenanceId, addMaintenanceRecord, loadFromLocalStorage } from '../../lib/github-data-store';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { maintenanceRecords, outdoorUnits, loadFromLocalStorage } from '../../../lib/data-store';
+import { maintenanceRecords, outdoorUnits, loadFromLocalStorage } from '../../../lib/github-data-store';
 
 export async function GET() {
   try {

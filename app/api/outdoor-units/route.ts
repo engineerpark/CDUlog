@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateOutdoorUnitRequest } from '../../types/outdoor-unit';
-import { outdoorUnits, initializeSampleData, getNextUnitId, addOutdoorUnit } from '../../lib/data-store';
+import { outdoorUnits, initializeSampleData, getNextUnitId, addOutdoorUnit } from '../../lib/github-data-store';
 
 export async function GET() {
   try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { maintenanceRecords, updateMaintenanceRecord, loadFromLocalStorage, updateUnitStatus, saveToLocalStorage } from '../../../lib/data-store';
+import { maintenanceRecords, updateMaintenanceRecord, loadFromLocalStorage, updateUnitStatus, saveToLocalStorage } from '../../../lib/github-data-store';
 
 export async function PUT(
   request: NextRequest,

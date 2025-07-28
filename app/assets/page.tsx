@@ -41,7 +41,7 @@ export default function AssetsPage() {
   const [factoryFilter, setFactoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
-  // 장비명 편집 상태 (관리자 전용)
+  // 장비명 편집 상태
   const [isEditingUnitName, setIsEditingUnitName] = useState(false);
   const [editingUnitName, setEditingUnitName] = useState<string>('');
   
@@ -53,6 +53,9 @@ export default function AssetsPage() {
     record: MaintenanceRecord;
     unit: OutdoorUnit;
   } | null>(null);
+  
+  // 전체 해제된 보수 이력 상태
+  const [allResolvedRecords, setAllResolvedRecords] = useState<(MaintenanceRecord & { unit: OutdoorUnit | null })[]>([]);
 
   useEffect(() => {
     // 로그인 확인
@@ -107,6 +110,8 @@ export default function AssetsPage() {
         setOutdoorUnits(result.data);
         // 최근 보수 이력 가져오기
         fetchLatestMaintenanceRecord();
+        // 전체 해제된 보수 이력 가져오기
+        fetchAllResolvedRecords();
       } else {
         setError('Failed to fetch outdoor units');
       }
@@ -127,6 +132,19 @@ export default function AssetsPage() {
       }
     } catch (error) {
       console.error('Error fetching latest maintenance record:', error);
+    }
+  };
+
+  const fetchAllResolvedRecords = async () => {
+    try {
+      const response = await fetch('/api/maintenance-records/all-resolved');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setAllResolvedRecords(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching all resolved records:', error);
     }
   };
 
@@ -180,6 +198,8 @@ export default function AssetsPage() {
         await fetchMaintenanceRecords(selectedUnit.id);
         // 최근 보수 이력 업데이트
         await fetchLatestMaintenanceRecord();
+        // 전체 해제된 보수 이력 업데이트
+        await fetchAllResolvedRecords();
         setCustomInput('');
         setError('유지보수 기록이 저장되었습니다.');
         
@@ -289,6 +309,8 @@ export default function AssetsPage() {
         await fetchMaintenanceRecords(selectedUnit.id);
         // 최근 보수 이력 업데이트
         await fetchLatestMaintenanceRecord();
+        // 전체 해제된 보수 이력 업데이트
+        await fetchAllResolvedRecords();
         setError('보수 항목이 해제되었습니다.');
         
         // 3초 후 성공 메시지 제거
@@ -493,17 +515,15 @@ export default function AssetsPage() {
                 ) : (
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold">{selectedUnit.name}</h2>
-                    {userRole === 'admin' && (
-                      <button
-                        onClick={handleEditUnitName}
-                        className="text-blue-200 hover:text-white"
-                        title="장비명 편집 (관리자 전용)"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                    )}
+                    <button
+                      onClick={handleEditUnitName}
+                      className="text-blue-200 hover:text-white"
+                      title="장비명 편집"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
                   </div>
                 )}
                 <p className="text-blue-100">{selectedUnit.factoryName} | {selectedUnit.location || '위치 미정'}</p>
@@ -790,6 +810,73 @@ export default function AssetsPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 전체 해제된 보수 이력 */}
+        {allResolvedRecords.length > 0 && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-lg shadow mb-6">
+            <div className="p-4">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-green-800">
+                    📋 완료된 보수 이력 ({allResolvedRecords.length}건)
+                  </h3>
+                  <p className="text-sm text-green-700">최근 해제된 보수 항목들입니다</p>
+                </div>
+              </div>
+              
+              <div className="max-h-80 overflow-y-auto space-y-3">
+                {allResolvedRecords.slice(0, 20).map((record) => (
+                  <div key={record.id} className="bg-white border border-green-200 rounded-lg p-4 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            완료
+                          </span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {record.unit?.factoryName || '미지정'} &gt; {record.unit?.name || '미지정'}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-900 font-medium mb-1">
+                          {record.description}
+                        </div>
+                        {record.resolvedNotes && (
+                          <div className="text-sm text-gray-600 bg-gray-50 rounded p-2">
+                            💬 {record.resolvedNotes}
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-3 sm:mt-0 sm:ml-4 text-right">
+                        <div className="text-xs text-green-600 font-medium">
+                          해제일: {record.resolvedDate ? 
+                            new Date(record.resolvedDate).toLocaleDateString('ko-KR') : 
+                            new Date(record.updatedAt).toLocaleDateString('ko-KR')
+                          }
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {record.resolvedBy || '담당자 미지정'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {allResolvedRecords.length > 20 && (
+                  <div className="text-center py-2">
+                    <span className="text-sm text-green-600">
+                      ... 외 {allResolvedRecords.length - 20}건 더 있습니다
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

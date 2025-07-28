@@ -1,1 +1,1 @@
-Force deploy for v1.0.12 - #오후
+GitHub-based data persistence v1.1.0 - #오후

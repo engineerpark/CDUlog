@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateOutdoorUnitRequest } from '../../types/outdoor-unit';
-import { outdoorUnits, initializeSampleData, getNextUnitId } from '../../lib/data-store';
+import { outdoorUnits, initializeSampleData, getNextUnitId, addOutdoorUnit } from '../../lib/data-store';
 
 export async function GET() {
   try {
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       updatedAt: now
     };
 
-    outdoorUnits.push(newUnit);
+    // 새로운 함수 사용 (자동으로 로컬스토리지에 저장됨)
+    addOutdoorUnit(newUnit);
 
     return NextResponse.json({
       success: true,

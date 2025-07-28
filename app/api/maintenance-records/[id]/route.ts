@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { maintenanceRecords, updateUnitStatus } from '../../../lib/data-store';
+import { maintenanceRecords, updateMaintenanceRecord, loadFromLocalStorage, updateUnitStatus, saveToLocalStorage } from '../../../lib/data-store';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 로컬스토리지에서 데이터 로드
+    loadFromLocalStorage();
+    
     const { id } = await params;
     const body = await request.json();
     
@@ -29,25 +32,27 @@ export async function PUT(
     // 보수 항목 해제 처리
     if ('isActive' in body && !body.isActive) {
       console.log('Resolving maintenance record');
-      record.isActive = false;
-      record.resolvedDate = now;
-      record.resolvedBy = body.resolvedBy || 'LG Chem 현장작업자';
-      record.resolvedNotes = body.resolvedNotes || '';
-      record.updatedAt = now;
+      const updates = {
+        isActive: false,
+        resolvedDate: now,
+        resolvedBy: body.resolvedBy || 'LG Chem 현장작업자',
+        resolvedNotes: body.resolvedNotes || ''
+      };
       
-      console.log('Updated record:', record);
+      // 새로운 업데이트 함수 사용 (자동으로 로컬스토리지에 저장됨)
+      updateMaintenanceRecord(id, updates);
       
-      // 실외기 상태 업데이트
-      updateUnitStatus(record.outdoorUnitId);
+      console.log('Updated record with new function');
     } else {
       // 기타 업데이트
-      Object.assign(record, body, { updatedAt: now });
+      updateMaintenanceRecord(id, body);
     }
 
+    const updatedRecord = maintenanceRecords.find(r => r.id === id);
     console.log('Returning success response');
     return NextResponse.json({
       success: true,
-      data: record
+      data: updatedRecord
     });
 
   } catch (error) {
@@ -64,6 +69,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 로컬스토리지에서 데이터 로드
+    loadFromLocalStorage();
+    
     const { id } = await params;
     const recordIndex = maintenanceRecords.findIndex(record => record.id === id);
     
@@ -78,6 +86,9 @@ export async function DELETE(
     
     // 실외기 상태 업데이트
     updateUnitStatus(deletedRecord.outdoorUnitId);
+    
+    // 로컬스토리지에 저장
+    saveToLocalStorage();
 
     return NextResponse.json({
       success: true,

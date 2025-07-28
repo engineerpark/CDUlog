@@ -47,6 +47,12 @@ export default function AssetsPage() {
   
   // 문의사항 모달 상태
   const [showContactModal, setShowContactModal] = useState(false);
+  
+  // 최근 보수 이력 상태
+  const [latestMaintenanceInfo, setLatestMaintenanceInfo] = useState<{
+    record: MaintenanceRecord;
+    unit: OutdoorUnit;
+  } | null>(null);
 
   useEffect(() => {
     // 로그인 확인
@@ -99,6 +105,8 @@ export default function AssetsPage() {
       
       if (result.success) {
         setOutdoorUnits(result.data);
+        // 최근 보수 이력 가져오기
+        fetchLatestMaintenanceRecord();
       } else {
         setError('Failed to fetch outdoor units');
       }
@@ -106,6 +114,19 @@ export default function AssetsPage() {
       setError('Network error occurred');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchLatestMaintenanceRecord = async () => {
+    try {
+      const response = await fetch('/api/maintenance-records/latest');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setLatestMaintenanceInfo(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching latest maintenance record:', error);
     }
   };
 
@@ -157,6 +178,8 @@ export default function AssetsPage() {
         // 성공 시 실외기 목록 새로고침 및 보수 항목 목록 새로고침
         await fetchOutdoorUnits();
         await fetchMaintenanceRecords(selectedUnit.id);
+        // 최근 보수 이력 업데이트
+        await fetchLatestMaintenanceRecord();
         setCustomInput('');
         setError('유지보수 기록이 저장되었습니다.');
         
@@ -264,6 +287,8 @@ export default function AssetsPage() {
         // 성공 시 목록 새로고침
         await fetchOutdoorUnits();
         await fetchMaintenanceRecords(selectedUnit.id);
+        // 최근 보수 이력 업데이트
+        await fetchLatestMaintenanceRecord();
         setError('보수 항목이 해제되었습니다.');
         
         // 3초 후 성공 메시지 제거
@@ -729,6 +754,46 @@ export default function AssetsPage() {
             </button>
           </div>
         </div>
+
+        {/* 최근 보수 이력 */}
+        {latestMaintenanceInfo && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-4 rounded-lg shadow mb-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="w-5 h-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-blue-800">
+                      📋 최근 보수 이력
+                    </h3>
+                    <div className="mt-1 text-sm text-blue-700">
+                      <span className="font-semibold">{latestMaintenanceInfo.unit.factoryName}</span>
+                      {' > '}
+                      <span className="font-semibold">{latestMaintenanceInfo.unit.name}</span>
+                      {' - '}
+                      <span>{latestMaintenanceInfo.record.description}</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:mt-0 text-right">
+                    <div className="text-xs text-blue-600">
+                      {new Date(latestMaintenanceInfo.record.createdAt).toLocaleDateString('ko-KR')}
+                    </div>
+                    <div className="text-xs text-blue-500">
+                      {new Date(latestMaintenanceInfo.record.createdAt).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 필터 */}
         <div className="bg-white p-4 rounded-lg shadow mb-6">

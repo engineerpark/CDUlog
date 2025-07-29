@@ -62,6 +62,12 @@ export default function AssetsPage() {
     isConnected: boolean;
     isAvailable: boolean;
     dataCount: { units: number; records: number };
+    connectionError?: string | null;
+    debugInfo?: {
+      hasToken: boolean;
+      tokenFormat: string;
+      tokenLength: number;
+    };
   } | null>(null);
 
   useEffect(() => {
@@ -822,6 +828,19 @@ export default function AssetsPage() {
                         : 'GitHub 연결 대기 중 - 로컬 저장소 사용'
                       }
                     </p>
+                    {!githubStatus.isConnected && githubStatus.connectionError && (
+                      <p className="text-xs text-red-600 mt-1">
+                        🔍 연결 실패: {githubStatus.connectionError}
+                      </p>
+                    )}
+                    {githubStatus.debugInfo && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        토큰 상태: {githubStatus.debugInfo.hasToken ? 
+                          `${githubStatus.debugInfo.tokenFormat} (${githubStatus.debugInfo.tokenLength}자)` : 
+                          '설정되지 않음'
+                        }
+                      </p>
+                    )}
                   </div>
                   <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     githubStatus.isConnected 

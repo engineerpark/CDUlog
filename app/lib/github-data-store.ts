@@ -28,9 +28,12 @@ export const loadAllDataFromGitHub = async (): Promise<boolean> => {
     console.log('Loading data from GitHub...');
     
     // GitHub 연결 테스트
-    isGitHubAvailable = await testGitHubConnection();
+    const connectionResult = await testGitHubConnection();
+    isGitHubAvailable = connectionResult.connected;
+    
     if (!isGitHubAvailable) {
       console.warn('GitHub not available, using fallback data');
+      console.warn('GitHub error:', connectionResult.error);
       return false;
     }
 

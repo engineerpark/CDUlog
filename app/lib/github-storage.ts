@@ -7,7 +7,28 @@ const GITHUB_CONFIG = {
   repo: 'CDUlog',
   branch: 'main',
   dataPath: 'data',
-  token: process.env.GITHUB_TOKEN || '', // Vercel 환경변수에서 토큰 가져오기
+  token: '', // 런타임에 설정됨
+};
+
+// 토큰 설정 함수 (서버 사이드에서만 실행)
+const getGitHubToken = (): string => {
+  if (typeof window !== 'undefined') {
+    // 클라이언트 사이드에서는 토큰 없음
+    return '';
+  }
+  
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    console.warn('GITHUB_TOKEN environment variable is not set');
+    return '';
+  }
+  
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+    console.warn('GITHUB_TOKEN format appears to be invalid');
+    return '';
+  }
+  
+  return token;
 };
 
 // 데이터 파일 경로
@@ -59,12 +80,19 @@ interface Metadata {
 }
 
 // GitHub API 헤더
-const getHeaders = () => ({
-  'Authorization': `token ${GITHUB_CONFIG.token}`,
-  'Accept': 'application/vnd.github.v3+json',
-  'Content-Type': 'application/json',
-  'User-Agent': 'CDUlog-App',
-});
+const getHeaders = () => {
+  const token = getGitHubToken();
+  if (!token) {
+    throw new Error('GitHub token is not available');
+  }
+  
+  return {
+    'Authorization': `token ${token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    'User-Agent': 'CDUlog-App',
+  };
+};
 
 // GitHub에서 파일 내용 가져오기
 export const getFileFromGitHub = async (filePath: string): Promise<string | null> => {
@@ -252,17 +280,38 @@ export const saveAllDataToGitHub = async (
 };
 
 // GitHub 연결 상태 확인
-export const testGitHubConnection = async (): Promise<boolean> => {
+export const testGitHubConnection = async (): Promise<{ connected: boolean; error?: string }> => {
   try {
+    // 토큰 확인
+    const token = getGitHubToken();
+    if (!token) {
+      return { 
+        connected: false, 
+        error: 'GITHUB_TOKEN environment variable is not set or invalid' 
+      };
+    }
+
     const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: getHeaders(),
     });
     
-    return response.ok;
+    if (!response.ok) {
+      const errorText = await response.text();
+      return { 
+        connected: false, 
+        error: `GitHub API error: ${response.status} ${response.statusText} - ${errorText}` 
+      };
+    }
+    
+    console.log('GitHub connection successful');
+    return { connected: true };
   } catch (error) {
     console.error('GitHub connection test failed:', error);
-    return false;
+    return { 
+      connected: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 };

@@ -1,0 +1,33 @@
+# Vercel 배포에서 제외할 파일들
+
+# 환경변수 파일들
+.env*
+!.env.example
+
+# 개발용 파일들
+*.md
+DEPLOYMENT.md
+
+# 데이터베이스 스크립트들 (배포 시 불필요)
+*.sql
+
+# 스크립트 폴더
+scripts/
+
+# 로그 파일들
+*.log
+logs/
+
+# 임시 파일들
+*.tmp
+*.temp
+
+# OS 관련 파일들
+.DS_Store
+Thumbs.db
+
+# IDE 설정 파일들
+.vscode/
+.idea/
+*.swp
+*.swo

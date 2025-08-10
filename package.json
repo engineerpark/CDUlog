@@ -4,14 +4,11 @@
   "description": "실외기 고장 및 보수 이력을 관리하는 반응형 웹앱",
   "private": true,
   "scripts": {
-    "dev": "node scripts/validate-env.js && next dev",
-    "build": "node scripts/validate-env.js && next build",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit",
-    "env:check": "node scripts/validate-env.js",
-    "env:init": "node scripts/validate-env.js --init",
-    "postinstall": "node scripts/validate-env.js || true"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

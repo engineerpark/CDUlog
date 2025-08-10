@@ -53,7 +53,7 @@ function loadEnvFile(envPath) {
   const envContent = fs.readFileSync(envPath, 'utf8')
   const envVars = {}
   
-  envContent.split('\\n').forEach(line => {
+  envContent.split('\n').forEach(line => {
     const trimmed = line.trim()
     if (trimmed && !trimmed.startsWith('#')) {
       const [key, ...valueParts] = trimmed.split('=')
@@ -79,8 +79,20 @@ function validateEnvironment() {
   console.log(`📁 프로젝트 경로: ${projectRoot}`)
   console.log('')
   
+  // .env 파일들 로드
+  const envFiles = ['.env.local', `.env.${currentEnv}`, '.env']
+  envFiles.forEach(file => {
+    const filePath = path.join(projectRoot, file)
+    const envVars = loadEnvFile(filePath)
+    Object.keys(envVars).forEach(key => {
+      if (!process.env[key]) {
+        process.env[key] = envVars[key]
+      }
+    })
+  })
+  
   // 환경변수 파일들 확인
-  const envFiles = [
+  const checkFiles = [
     '.env.local',
     '.env.development',
     '.env.production',
@@ -88,7 +100,7 @@ function validateEnvironment() {
   ]
   
   console.log('📄 환경변수 파일 상태:')
-  envFiles.forEach(file => {
+  checkFiles.forEach(file => {
     const filePath = path.join(projectRoot, file)
     const exists = fs.existsSync(filePath)
     console.log(`   ${exists ? '✅' : '❌'} ${file}`)

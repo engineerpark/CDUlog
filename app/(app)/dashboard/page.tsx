@@ -2,6 +2,7 @@
 import { createServerClient, getCurrentUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Container, ResponsiveGrid, ResponsiveShow } from '@/components/layout/responsive-layout'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

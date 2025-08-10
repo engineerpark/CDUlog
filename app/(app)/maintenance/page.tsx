@@ -24,6 +24,8 @@ import {
 import { MaintenanceForm } from '@/components/maintenance/maintenance-form'
 import { MaintenanceStatusButton } from '@/components/maintenance/status-button'
 import { DeleteMaintenanceButton } from '@/components/maintenance/delete-button'
+import { MaintenanceFilters } from '@/components/maintenance/maintenance-filters'
+import { Pagination, usePagination } from '@/components/ui/pagination'
 import {
   Plus,
   MoreHorizontal,
@@ -40,6 +42,11 @@ interface SearchParams {
   status?: string
   unit?: string
   type?: string
+  search?: string
+  priority?: string
+  date_from?: string
+  date_to?: string
+  page?: string
 }
 
 export default async function MaintenancePage({

@@ -5,9 +5,145 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createActionClient, getCurrentUser } from '@/lib/supabase/server'
 import type { MaintenanceLogInsert, MaintenanceLogUpdate } from '@/types/database'
+import type { MaintenanceFormData } from '@/lib/validations/maintenance'
 
 /**
- * 유지보수 이력 생성
+ * 유지보수 이력 생성 (새로운 폼 데이터 형식)
+ */
+export async function createMaintenance(data: MaintenanceFormData) {
+  const supabase = createActionClient()
+  const user = await getCurrentUser()
+  
+  if (!user) {
+    return { success: false, error: '인증이 필요합니다.' }
+  }
+  
+  // 유지보수 생성 권한 확인 (기술자 이상)
+  if (!['technician', 'manager', 'admin'].includes(user.profile?.role || '')) {
+    return { success: false, error: '유지보수 등록 권한이 없습니다.' }
+  }
+  
+  try {
+    const maintenanceLogData: MaintenanceLogInsert = {
+      unit_id: data.unit_id,
+      user_id: user.id,
+      title: data.title,
+      description: data.description || null,
+      maintenance_type: data.maintenance_type,
+      status: data.status,
+      priority: data.priority,
+      scheduled_date: data.scheduled_date.toISOString(),
+      estimated_duration: data.estimated_duration || null,
+      estimated_cost: data.estimated_cost || null,
+      actual_cost: data.actual_cost || null,
+      work_description: data.work_description || null,
+      notes: data.notes || null,
+      parts_used: data.parts_used || null,
+      tools_used: data.tools_used || null
+    }
+    
+    const { data: result, error } = await supabase
+      .from('maintenance_logs')
+      .insert(maintenanceLogData)
+      .select(`
+        *,
+        units(name, location),
+        profiles!user_id(full_name)
+      `)
+      .single()
+    
+    if (error) {
+      console.error('Error creating maintenance:', error)
+      return { success: false, error: '유지보수 등록에 실패했습니다.' }
+    }
+    
+    revalidatePath('/maintenance')
+    revalidatePath('/dashboard')
+    return { success: true, data: result }
+    
+  } catch (error) {
+    console.error('Unexpected error creating maintenance:', error)
+    return { success: false, error: '유지보수 등록 중 오류가 발생했습니다.' }
+  }
+}
+
+/**
+ * 유지보수 이력 수정 (새로운 폼 데이터 형식)
+ */
+export async function updateMaintenance(id: string, data: MaintenanceFormData) {
+  const supabase = createActionClient()
+  const user = await getCurrentUser()
+  
+  if (!user) {
+    return { success: false, error: '인증이 필요합니다.' }
+  }
+  
+  try {
+    // 기존 데이터 확인 (권한 검증)
+    const { data: existingLog, error: fetchError } = await supabase
+      .from('maintenance_logs')
+      .select('user_id')
+      .eq('id', id)
+      .single()
+    
+    if (fetchError || !existingLog) {
+      return { success: false, error: '유지보수 이력을 찾을 수 없습니다.' }
+    }
+    
+    // 본인이 작성한 기록이거나 관리자 권한이 있는지 확인
+    const isOwner = existingLog.user_id === user.id
+    const hasAdminRole = ['admin', 'manager'].includes(user.profile?.role || '')
+    
+    if (!isOwner && !hasAdminRole) {
+      return { success: false, error: '수정 권한이 없습니다.' }
+    }
+    
+    const updateData: MaintenanceLogUpdate = {
+      title: data.title,
+      description: data.description || null,
+      unit_id: data.unit_id,
+      maintenance_type: data.maintenance_type,
+      status: data.status,
+      priority: data.priority,
+      scheduled_date: data.scheduled_date.toISOString(),
+      estimated_duration: data.estimated_duration || null,
+      estimated_cost: data.estimated_cost || null,
+      actual_cost: data.actual_cost || null,
+      work_description: data.work_description || null,
+      notes: data.notes || null,
+      parts_used: data.parts_used || null,
+      tools_used: data.tools_used || null,
+      updated_at: new Date().toISOString()
+    }
+    
+    const { data: result, error } = await supabase
+      .from('maintenance_logs')
+      .update(updateData)
+      .eq('id', id)
+      .select(`
+        *,
+        units(name, location),
+        profiles!user_id(full_name)
+      `)
+      .single()
+    
+    if (error) {
+      console.error('Error updating maintenance:', error)
+      return { success: false, error: '유지보수 수정에 실패했습니다.' }
+    }
+    
+    revalidatePath('/maintenance')
+    revalidatePath('/dashboard')
+    return { success: true, data: result }
+    
+  } catch (error) {
+    console.error('Unexpected error updating maintenance:', error)
+    return { success: false, error: '유지보수 수정 중 오류가 발생했습니다.' }
+  }
+}
+
+/**
+ * 유지보수 이력 생성 (기존 FormData 형식 - 호환성)
  */
 export async function createMaintenanceLog(formData: FormData) {
   const supabase = createActionClient()

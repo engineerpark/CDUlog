@@ -43,14 +43,17 @@ const nextConfig = {
     ]
   },
 
-  // 웹팩 설정 (필요시)
+  // 웹팩 설정 - React JSX runtime 및 client 에러 해결
   webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
-    // React 18 관련 설정
+    // React 모듈 경로 명시적 설정
     config.resolve.alias = {
       ...config.resolve.alias,
-      // React 버전 강제 고정
       'react': require.resolve('react'),
       'react-dom': require.resolve('react-dom'),
+      'react-dom/client': require.resolve('react-dom/client'),
+      'react-dom/server': require.resolve('react-dom/server'),
+      'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+      'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
     }
     
     return config

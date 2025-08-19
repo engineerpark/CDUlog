@@ -1,6 +1,6 @@
 {
   "name": "cdulog",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "실외기 유지보수 관리 시스템",
   "private": true,
   "scripts": {

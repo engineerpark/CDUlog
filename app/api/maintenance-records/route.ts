@@ -20,6 +20,12 @@ export async function GET(request: NextRequest) {
     
     const { data, error } = await query;
     
+    console.log('GET - Supabase query result:', { 
+      dataCount: data?.length || 0, 
+      error: error?.message || null,
+      outdoorUnitId 
+    });
+    
     if (error) {
       console.error('Supabase error:', error);
       return NextResponse.json(

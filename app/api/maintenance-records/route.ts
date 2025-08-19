@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Supabase 형식으로 데이터 변환
+    // Supabase 형식으로 데이터 변환 (새로운 스키마)
     const supabaseRecord = {
       outdoor_unit_id: body.outdoorUnitId,
       maintenance_date: body.maintenanceDate,
@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
       description: body.description,
       performed_by: body.performedBy,
       status: body.status,
-      next_maintenance_date: body.nextMaintenanceDate,
-      cost: body.cost,
-      notes: body.notes,
+      next_maintenance_date: body.nextMaintenanceDate || null,
+      cost: body.cost || null,
+      notes: body.notes || '',
       is_active: true
     };
 

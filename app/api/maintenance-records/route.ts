@@ -112,6 +112,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 응답 데이터를 기존 형식으로 변환
+    if (!data) {
+      console.error('No data returned from Supabase insert');
+      return NextResponse.json(
+        { success: false, error: 'No data returned from database' },
+        { status: 500 }
+      );
+    }
+
     const responseData = {
       id: data.id,
       outdoorUnitId: data.outdoor_unit_id,
@@ -130,6 +138,8 @@ export async function POST(request: NextRequest) {
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
+
+    console.log('Successfully created record:', responseData);
 
     // 실외기 상태 업데이트 (로컬 데이터만)
     updateUnitStatus(body.outdoorUnitId);

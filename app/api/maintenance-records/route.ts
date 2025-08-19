@@ -93,17 +93,20 @@ export async function POST(request: NextRequest) {
       is_active: true
     };
 
-    // Supabase에 저장
+    // Supabase에 저장 (디버그 로깅 추가)
+    console.log('Attempting to insert record:', supabaseRecord);
     const { data, error } = await supabase
       .from('maintenance_records')
       .insert(supabaseRecord)
       .select()
       .single();
 
+    console.log('Supabase response:', { data, error });
+
     if (error) {
       console.error('Supabase insert error:', error);
       return NextResponse.json(
-        { success: false, error: 'Failed to save maintenance record to database' },
+        { success: false, error: `Failed to save to database: ${error.message}` },
         { status: 500 }
       );
     }

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateOutdoorUnitRequest } from '../../types/outdoor-unit';
-import { outdoorUnits, initializeSampleData, getNextUnitId, addOutdoorUnit } from '../../lib/github-data-store';
+import { fetchOutdoorUnits, addOutdoorUnit } from '../../lib/supabase-data-store';
 
 export async function GET() {
   try {
-    // 첫 번째 요청 시 샘플 데이터 초기화
-    initializeSampleData();
+    const outdoorUnits = await fetchOutdoorUnits();
     
     return NextResponse.json({
       success: true,
@@ -38,21 +37,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const now = new Date().toISOString();
     const newUnit = {
-      id: getNextUnitId().toString(),
       ...body,
-      maintenanceRecords: [],
-      createdAt: now,
-      updatedAt: now
+      status: 'active' as const,
+      maintenanceRecords: []
     };
 
-    // 새로운 함수 사용 (자동으로 로컬스토리지에 저장됨)
-    addOutdoorUnit(newUnit);
+    // Supabase에 저장
+    const createdUnit = await addOutdoorUnit(newUnit);
 
     return NextResponse.json({
       success: true,
-      data: newUnit
+      data: createdUnit
     }, { status: 201 });
 
   } catch (error) {

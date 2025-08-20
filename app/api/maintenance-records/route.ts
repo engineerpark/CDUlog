@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateMaintenanceRecordRequest } from '../../types/outdoor-unit';
-import { maintenanceRecords, getNextMaintenanceId, addMaintenanceRecord, loadFromLocalStorage } from '../../lib/github-data-store';
+import { fetchMaintenanceRecords, addMaintenanceRecord } from '../../lib/supabase-data-store';
 
 export async function GET(request: NextRequest) {
   try {
-    // 로컬스토리지에서 데이터 로드
-    loadFromLocalStorage();
-    
     const { searchParams } = new URL(request.url);
     const outdoorUnitId = searchParams.get('outdoorUnitId');
     
-    let filteredRecords = maintenanceRecords;
-    if (outdoorUnitId) {
-      filteredRecords = maintenanceRecords.filter(record => record.outdoorUnitId === outdoorUnitId);
-    }
+    const records = await fetchMaintenanceRecords(outdoorUnitId || undefined);
     
     return NextResponse.json({
       success: true,
-      data: filteredRecords
+      data: records
     });
   } catch (error) {
     console.error('Error fetching maintenance records:', error);
@@ -46,21 +40,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const now = new Date().toISOString();
     const newRecord = {
-      id: getNextMaintenanceId().toString(),
       ...body,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now
+      isActive: true
     };
 
-    // 새로운 함수 사용 (자동으로 로컬스토리지에 저장됨)
-    addMaintenanceRecord(newRecord);
+    // Supabase에 저장
+    const createdRecord = await addMaintenanceRecord(newRecord);
 
     return NextResponse.json({
       success: true,
-      data: newRecord
+      data: createdRecord
     }, { status: 201 });
 
   } catch (error) {

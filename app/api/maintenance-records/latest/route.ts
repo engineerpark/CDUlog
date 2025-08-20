@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getLatestMaintenanceRecord, loadFromLocalStorage } from '../../../lib/github-data-store';
+import { getLatestMaintenanceRecord } from '../../../lib/supabase-data-store';
 
 export async function GET() {
   try {
-    // 로컬스토리지에서 데이터 로드
-    loadFromLocalStorage();
-    
-    const latestInfo = getLatestMaintenanceRecord();
+    const latestInfo = await getLatestMaintenanceRecord();
     
     return NextResponse.json({
       success: true,

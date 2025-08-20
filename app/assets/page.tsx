@@ -80,7 +80,7 @@ export default function AssetsPage() {
     };
     
     checkAuth();
-  }, [router]);
+  }, [router, fetchOutdoorUnits]);
 
   useEffect(() => {
     // selectedUnit이 변경될 때 상태 동기화

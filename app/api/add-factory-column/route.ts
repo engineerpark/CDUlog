@@ -17,15 +17,8 @@ export async function POST() {
     if (error) {
       console.error('Error adding columns:', error);
       
-      // Try alternative approach using direct SQL
-      const { data: alterData, error: alterError } = await supabase
-        .from('outdoor_units')
-        .select('id')
-        .limit(1);
-        
-      if (alterError) {
-        console.error('Alternative check failed:', alterError);
-      }
+      // Log the error for debugging
+      console.error('RPC exec_sql not available - manual column addition required');
       
       return NextResponse.json({
         success: false,

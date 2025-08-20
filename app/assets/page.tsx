@@ -624,13 +624,17 @@ export default function AssetsPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleMaintenanceRecordResolve(record.id, '기본 해제')}
-                            className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                            disabled={isSubmitting}
+                            className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ cursor: isSubmitting ? 'wait' : 'pointer' }}
                           >
                             해제
                           </button>
                           <button
                             onClick={() => handleInlineEditToggle(record.id)}
-                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            disabled={isSubmitting}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ cursor: isSubmitting ? 'wait' : 'pointer' }}
                           >
                             {inlineEditingRecord === record.id ? '취소' : '내역작성'}
                           </button>
@@ -834,162 +838,27 @@ export default function AssetsPage() {
           </div>
         </div>
 
-        {/* Supabase 연동 상태 */}
-        {supabaseStatus && (
-          <div className={`border-l-4 rounded-lg shadow mb-6 p-4 ${
-            supabaseStatus.isConnected 
-              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-400' 
-              : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-400'
-          }`}>
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className={`w-5 h-5 ${supabaseStatus.isConnected ? 'text-green-400' : 'text-red-400'}`} fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21.362 9.354H12V.396a.396.396 0 0 0-.716-.233L2.203 12.424l-.401.562a1.04 1.04 0 0 0 0 1.028l.401.562L11.284 26.837a.396.396 0 0 0 .716-.233V17.646h9.362a.396.396 0 0 0 .396-.396V9.75a.396.396 0 0 0-.396-.396Z"/>
-                </svg>
-              </div>
-              <div className="ml-3 flex-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className={`text-sm font-medium ${supabaseStatus.isConnected ? 'text-green-800' : 'text-red-800'}`}>
-                      💾 Supabase 데이터베이스 연돐 상태
-                    </h3>
-                    <p className={`text-xs ${supabaseStatus.isConnected ? 'text-green-700' : 'text-red-700'}`}>
-                      {supabaseStatus.isConnected 
-                        ? `클라우드 DB 연결됨 (실외기 ${supabaseStatus.dataCount.units}대, 보수기록 ${supabaseStatus.dataCount.records}건)`
-                        : 'Supabase 연결 실패 - 환경변수 확인 필요'
-                      }
-                    </p>
-                    {!supabaseStatus.isConnected && supabaseStatus.connectionError && (
-                      <p className="text-xs text-red-600 mt-1">
-                        🔍 연결 오류: {supabaseStatus.connectionError}
-                      </p>
-                    )}
-                    {supabaseStatus.debugInfo && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        환경변수: URL {supabaseStatus.debugInfo.hasUrl ? '✓' : '✗'}, 
-                        API Key {supabaseStatus.debugInfo.hasKey ? '✓' : '✗'}
-                      </p>
-                    )}
-                  </div>
-                  <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    supabaseStatus.isConnected 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {supabaseStatus.isConnected ? '✓ 연결됨' : '❌ 연결실패'}
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Supabase 연결상태 - 작은 신호등 아이콘 */}
+        <div className="flex justify-between items-center mb-4">
+          <div></div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">DB 연결상태:</span>
+            <div 
+              className={`w-3 h-3 rounded-full ${
+                supabaseStatus?.isConnected 
+                  ? 'bg-green-500' 
+                  : supabaseStatus?.isAvailable === false 
+                  ? 'bg-red-500' 
+                  : 'bg-yellow-500'
+              }`}
+              title={supabaseStatus?.isConnected 
+                ? `연결됨 (실외기 ${supabaseStatus.dataCount.units}대, 보수기록 ${supabaseStatus.dataCount.records}건)`
+                : supabaseStatus?.connectionError || '연결 확인 중...'}
+            ></div>
           </div>
-        )}
+        </div>
 
-        {/* 최근 보수 이력 */}
-        {latestMaintenanceInfo && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-4 rounded-lg shadow mb-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="w-5 h-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3 flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-blue-800">
-                      📋 최근 보수 이력
-                    </h3>
-                    <div className="mt-1 text-sm text-blue-700">
-                      <span className="font-semibold">{latestMaintenanceInfo.unit.factoryName}</span>
-                      {' > '}
-                      <span className="font-semibold">{latestMaintenanceInfo.unit.name}</span>
-                      {' - '}
-                      <span>{latestMaintenanceInfo.record.description}</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 sm:mt-0 text-right">
-                    <div className="text-xs text-blue-600">
-                      {new Date(latestMaintenanceInfo.record.createdAt).toLocaleDateString('ko-KR')}
-                    </div>
-                    <div className="text-xs text-blue-500">
-                      {new Date(latestMaintenanceInfo.record.createdAt).toLocaleTimeString('ko-KR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* 전체 해제된 보수 이력 */}
-        {allResolvedRecords.length > 0 && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-lg shadow mb-6">
-            <div className="p-4">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0">
-                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-green-800">
-                    📋 완료된 보수 이력 ({allResolvedRecords.length}건)
-                  </h3>
-                  <p className="text-sm text-green-700">최근 해제된 보수 항목들입니다</p>
-                </div>
-              </div>
-              
-              <div className="max-h-80 overflow-y-auto space-y-3">
-                {allResolvedRecords.slice(0, 20).map((record) => (
-                  <div key={record.id} className="bg-white border border-green-200 rounded-lg p-4 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            완료
-                          </span>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {record.unit?.factoryName || '미지정'} &gt; {record.unit?.name || '미지정'}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-900 font-medium mb-1">
-                          {record.description}
-                        </div>
-                        {record.resolvedNotes && (
-                          <div className="text-sm text-gray-600 bg-gray-50 rounded p-2">
-                            💬 {record.resolvedNotes}
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-3 sm:mt-0 sm:ml-4 text-right">
-                        <div className="text-xs text-green-600 font-medium">
-                          해제일: {record.resolvedDate ? 
-                            new Date(record.resolvedDate).toLocaleDateString('ko-KR') : 
-                            new Date(record.updatedAt).toLocaleDateString('ko-KR')
-                          }
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {record.resolvedBy || '담당자 미지정'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {allResolvedRecords.length > 20 && (
-                  <div className="text-center py-2">
-                    <span className="text-sm text-green-600">
-                      ... 외 {allResolvedRecords.length - 20}건 더 있습니다
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 필터 */}
         <div className="bg-white p-4 rounded-lg shadow mb-6">

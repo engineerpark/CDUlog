@@ -50,23 +50,30 @@ const mapAppUnitToDatabase = (appUnit: Partial<OutdoorUnit>): Partial<DatabaseOu
   updated_at: new Date().toISOString()
 });
 
-const mapAppRecordToDatabase = (appRecord: Partial<MaintenanceRecord>): Partial<DatabaseMaintenanceRecord> => ({
-  id: appRecord.id,
-  outdoor_unit_id: appRecord.outdoorUnitId,
-  maintenance_date: appRecord.maintenanceDate,
-  maintenance_type: appRecord.maintenanceType,
-  description: appRecord.description,
-  performed_by: appRecord.performedBy,
-  status: appRecord.status,
-  next_maintenance_date: appRecord.nextMaintenanceDate,
-  cost: appRecord.cost,
-  notes: appRecord.notes,
-  is_active: appRecord.isActive,
-  resolved_date: appRecord.resolvedDate,
-  resolved_by: appRecord.resolvedBy,
-  resolved_notes: appRecord.resolvedNotes,
-  updated_at: new Date().toISOString()
-});
+const mapAppRecordToDatabase = (appRecord: Partial<MaintenanceRecord>, includeId: boolean = true): Partial<DatabaseMaintenanceRecord> => {
+  const mapped: Partial<DatabaseMaintenanceRecord> = {
+    outdoor_unit_id: appRecord.outdoorUnitId,
+    maintenance_date: appRecord.maintenanceDate,
+    maintenance_type: appRecord.maintenanceType,
+    description: appRecord.description,
+    performed_by: appRecord.performedBy,
+    status: appRecord.status,
+    next_maintenance_date: appRecord.nextMaintenanceDate,
+    cost: appRecord.cost,
+    notes: appRecord.notes,
+    is_active: appRecord.isActive,
+    resolved_date: appRecord.resolvedDate,
+    resolved_by: appRecord.resolvedBy,
+    resolved_notes: appRecord.resolvedNotes,
+    updated_at: new Date().toISOString()
+  };
+  
+  if (includeId && appRecord.id) {
+    mapped.id = appRecord.id;
+  }
+  
+  return mapped;
+};
 
 // 실외기 목록 조회
 export const fetchOutdoorUnits = async (): Promise<OutdoorUnit[]> => {
@@ -129,11 +136,18 @@ export const fetchMaintenanceRecords = async (outdoorUnitId?: string): Promise<M
 // 유지보수 기록 추가
 export const addMaintenanceRecord = async (record: Omit<MaintenanceRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<MaintenanceRecord> => {
   try {
+    console.log('Adding maintenance record:', record);
+    
+    const mappedRecord = mapAppRecordToDatabase(record, false); // ID 제외
+    console.log('Mapped record:', mappedRecord);
+    
     const newRecord = {
-      ...mapAppRecordToDatabase(record),
+      ...mappedRecord,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
+    
+    console.log('Final record to insert:', newRecord);
 
     const { data, error } = await supabase
       .from('maintenance_records')
@@ -143,15 +157,19 @@ export const addMaintenanceRecord = async (record: Omit<MaintenanceRecord, 'id' 
 
     if (error) {
       console.error('Error adding maintenance record:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
 
+    console.log('Successfully inserted record:', data);
+    
     // 실외기 상태 업데이트
     await updateUnitStatus(record.outdoorUnitId);
 
     return mapDatabaseRecordToApp(data);
   } catch (error) {
     console.error('Failed to add maintenance record:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : error);
     throw error;
   }
 };
@@ -160,7 +178,7 @@ export const addMaintenanceRecord = async (record: Omit<MaintenanceRecord, 'id' 
 export const updateMaintenanceRecord = async (recordId: string, updates: Partial<MaintenanceRecord>): Promise<MaintenanceRecord> => {
   try {
     const updateData = {
-      ...mapAppRecordToDatabase(updates),
+      ...mapAppRecordToDatabase(updates, true), // ID 포함
       updated_at: new Date().toISOString()
     };
 

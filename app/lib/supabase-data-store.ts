@@ -71,8 +71,9 @@ const mapAppRecordToDatabase = (appRecord: Partial<MaintenanceRecord>): Partial<
 // 실외기 목록 조회
 export const fetchOutdoorUnits = async (): Promise<OutdoorUnit[]> => {
   try {
+    console.log('Fetching outdoor units from Supabase...');
     const { data, error } = await supabase
-      .from('v_outdoor_units_detail')
+      .from('outdoor_units')
       .select('*');
 
     if (error) {
@@ -80,12 +81,14 @@ export const fetchOutdoorUnits = async (): Promise<OutdoorUnit[]> => {
       throw error;
     }
 
+    console.log('Raw data from Supabase:', data?.length || 0, 'units');
+    
     return (data || []).map(unit => ({
       id: unit.id,
       name: unit.name,
       installationDate: unit.installation_date || '',
-      location: unit.location_name || 'Unknown',
-      factoryName: unit.factory_name || 'Unknown',
+      location: 'Unknown', // TODO: Join with locations table
+      factoryName: 'Unknown', // TODO: Join with factories table
       status: (unit.status as 'active' | 'maintenance' | 'inactive') || 'active',
       lastMaintenanceDate: unit.last_maintenance_date || '',
       nextMaintenanceDate: unit.next_maintenance_date || '',

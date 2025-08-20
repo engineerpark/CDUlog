@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { maintenanceRecords, outdoorUnits, loadFromLocalStorage } from '../../../lib/github-data-store';
+import { fetchMaintenanceRecords, fetchOutdoorUnits } from '../../../lib/supabase-data-store';
 
 export async function GET() {
   try {
-    // 로컬스토리지에서 데이터 로드
-    loadFromLocalStorage();
+    // Supabase에서 데이터 로드
+    const allRecords = await fetchMaintenanceRecords();
+    const allUnits = await fetchOutdoorUnits();
     
     // 해제된 모든 보수 기록을 최신순으로 정렬
-    const resolvedRecords = maintenanceRecords
+    const resolvedRecords = allRecords
       .filter(record => !record.isActive)
       .sort((a, b) => {
         const dateA = new Date(a.resolvedDate || a.updatedAt).getTime();
@@ -16,7 +17,7 @@ export async function GET() {
       })
       .map(record => {
         // 해당 실외기 정보도 함께 포함
-        const unit = outdoorUnits.find(u => u.id === record.outdoorUnitId);
+        const unit = allUnits.find(u => u.id === record.outdoorUnitId);
         return {
           ...record,
           unit: unit ? {

@@ -57,16 +57,16 @@ export default function AssetsPage() {
   // 전체 해제된 보수 이력 상태
   const [allResolvedRecords, setAllResolvedRecords] = useState<(MaintenanceRecord & { unit: OutdoorUnit | null })[]>([]);
   
-  // GitHub 연동 상태
-  const [githubStatus, setGithubStatus] = useState<{
+  // Supabase 연동 상태
+  const [supabaseStatus, setSupabaseStatus] = useState<{
     isConnected: boolean;
     isAvailable: boolean;
     dataCount: { units: number; records: number };
     connectionError?: string | null;
     debugInfo?: {
-      hasToken: boolean;
-      tokenFormat: string;
-      tokenLength: number;
+      hasUrl: boolean;
+      hasKey: boolean;
+      urlPrefix: string;
     };
   } | null>(null);
 
@@ -125,8 +125,8 @@ export default function AssetsPage() {
         fetchLatestMaintenanceRecord();
         // 전체 해제된 보수 이력 가져오기
         fetchAllResolvedRecords();
-        // GitHub 상태 가져오기
-        fetchGitHubStatus();
+        // Supabase 상태 가져오기
+        fetchSupabaseStatus();
       } else {
         setError('Failed to fetch outdoor units');
       }
@@ -163,16 +163,47 @@ export default function AssetsPage() {
     }
   };
 
-  const fetchGitHubStatus = async () => {
+  const fetchSupabaseStatus = async () => {
     try {
-      const response = await fetch('/api/github-status');
-      const result = await response.json();
+      const healthResponse = await fetch('/api/health');
+      const healthResult = await healthResponse.json();
       
-      if (result.success && result.data) {
-        setGithubStatus(result.data);
+      if (healthResult.success) {
+        // 데이터 수 조회
+        const unitsResponse = await fetch('/api/outdoor-units');
+        const recordsResponse = await fetch('/api/maintenance-records');
+        
+        const unitsResult = await unitsResponse.json();
+        const recordsResult = await recordsResponse.json();
+        
+        setSupabaseStatus({
+          isConnected: healthResult.data.hasSupabaseUrl && healthResult.data.hasSupabaseKey,
+          isAvailable: true,
+          dataCount: {
+            units: unitsResult.success ? unitsResult.data.length : 0,
+            records: recordsResult.success ? recordsResult.data.length : 0
+          },
+          connectionError: unitsResult.success ? null : 'API 연결 오류',
+          debugInfo: {
+            hasUrl: healthResult.data.hasSupabaseUrl,
+            hasKey: healthResult.data.hasSupabaseKey,
+            urlPrefix: healthResult.data.supabaseUrlPrefix
+          }
+        });
       }
     } catch (error) {
-      console.error('Error fetching GitHub status:', error);
+      console.error('Error fetching Supabase status:', error);
+      setSupabaseStatus({
+        isConnected: false,
+        isAvailable: false,
+        dataCount: { units: 0, records: 0 },
+        connectionError: '연결 실패',
+        debugInfo: {
+          hasUrl: false,
+          hasKey: false,
+          urlPrefix: 'Unknown'
+        }
+      });
     }
   };
 
@@ -803,51 +834,49 @@ export default function AssetsPage() {
           </div>
         </div>
 
-        {/* GitHub 연동 상태 */}
-        {githubStatus && (
+        {/* Supabase 연동 상태 */}
+        {supabaseStatus && (
           <div className={`border-l-4 rounded-lg shadow mb-6 p-4 ${
-            githubStatus.isConnected 
+            supabaseStatus.isConnected 
               ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-400' 
-              : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-400'
+              : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-400'
           }`}>
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className={`w-5 h-5 ${githubStatus.isConnected ? 'text-green-400' : 'text-yellow-400'}`} fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
+                <svg className={`w-5 h-5 ${supabaseStatus.isConnected ? 'text-green-400' : 'text-red-400'}`} fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M21.362 9.354H12V.396a.396.396 0 0 0-.716-.233L2.203 12.424l-.401.562a1.04 1.04 0 0 0 0 1.028l.401.562L11.284 26.837a.396.396 0 0 0 .716-.233V17.646h9.362a.396.396 0 0 0 .396-.396V9.75a.396.396 0 0 0-.396-.396Z"/>
                 </svg>
               </div>
               <div className="ml-3 flex-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className={`text-sm font-medium ${githubStatus.isConnected ? 'text-green-800' : 'text-yellow-800'}`}>
-                      🔗 GitHub 저장소 연동 상태
+                    <h3 className={`text-sm font-medium ${supabaseStatus.isConnected ? 'text-green-800' : 'text-red-800'}`}>
+                      💾 Supabase 데이터베이스 연돐 상태
                     </h3>
-                    <p className={`text-xs ${githubStatus.isConnected ? 'text-green-700' : 'text-yellow-700'}`}>
-                      {githubStatus.isConnected 
-                        ? `데이터 영구 저장 중 (실외기 ${githubStatus.dataCount.units}대, 보수기록 ${githubStatus.dataCount.records}건)`
-                        : 'GitHub 연결 대기 중 - 로컬 저장소 사용'
+                    <p className={`text-xs ${supabaseStatus.isConnected ? 'text-green-700' : 'text-red-700'}`}>
+                      {supabaseStatus.isConnected 
+                        ? `클라우드 DB 연결됨 (실외기 ${supabaseStatus.dataCount.units}대, 보수기록 ${supabaseStatus.dataCount.records}건)`
+                        : 'Supabase 연결 실패 - 환경변수 확인 필요'
                       }
                     </p>
-                    {!githubStatus.isConnected && githubStatus.connectionError && (
+                    {!supabaseStatus.isConnected && supabaseStatus.connectionError && (
                       <p className="text-xs text-red-600 mt-1">
-                        🔍 연결 실패: {githubStatus.connectionError}
+                        🔍 연결 오류: {supabaseStatus.connectionError}
                       </p>
                     )}
-                    {githubStatus.debugInfo && (
+                    {supabaseStatus.debugInfo && (
                       <p className="text-xs text-gray-500 mt-1">
-                        토큰 상태: {githubStatus.debugInfo.hasToken ? 
-                          `${githubStatus.debugInfo.tokenFormat} (${githubStatus.debugInfo.tokenLength}자)` : 
-                          '설정되지 않음'
-                        }
+                        환경변수: URL {supabaseStatus.debugInfo.hasUrl ? '✓' : '✗'}, 
+                        API Key {supabaseStatus.debugInfo.hasKey ? '✓' : '✗'}
                       </p>
                     )}
                   </div>
                   <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    githubStatus.isConnected 
+                    supabaseStatus.isConnected 
                       ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
                   }`}>
-                    {githubStatus.isConnected ? '✓ 연결됨' : '⚠ 대기중'}
+                    {supabaseStatus.isConnected ? '✓ 연결됨' : '❌ 연결실패'}
                   </div>
                 </div>
               </div>

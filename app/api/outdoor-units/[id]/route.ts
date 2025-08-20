@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UpdateOutdoorUnitRequest } from '../../../types/outdoor-unit';
-import { outdoorUnits, initializeSampleData } from '../../../lib/data-store';
+import { updateOutdoorUnit, fetchOutdoorUnits } from '../../../lib/supabase-data-store';
+import { supabase } from '../../../lib/supabase';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 데이터 초기화
-    initializeSampleData();
-    
     const { id } = await params;
-    const unit = outdoorUnits.find(unit => unit.id === id);
     
-    if (!unit) {
+    const { data: unit, error } = await supabase
+      .from('outdoor_units')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !unit) {
       return NextResponse.json(
         { success: false, error: 'Outdoor unit not found' },
         { status: 404 }
@@ -38,29 +41,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 데이터 초기화
-    initializeSampleData();
-    
     const { id } = await params;
     const body: UpdateOutdoorUnitRequest = await request.json();
-    const unitIndex = outdoorUnits.findIndex(unit => unit.id === id);
     
-    if (unitIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Outdoor unit not found' },
-        { status: 404 }
-      );
-    }
-
-
-    const updatedUnit = {
-      ...outdoorUnits[unitIndex],
-      ...body,
-      id: id, // ID는 변경되지 않도록
-      updatedAt: new Date().toISOString()
-    };
-
-    outdoorUnits[unitIndex] = updatedUnit;
+    const updatedUnit = await updateOutdoorUnit(id, body);
 
     return NextResponse.json({
       success: true,
@@ -81,20 +65,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 데이터 초기화
-    initializeSampleData();
-    
     const { id } = await params;
-    const unitIndex = outdoorUnits.findIndex(unit => unit.id === id);
     
-    if (unitIndex === -1) {
+    const { data: deletedUnit, error } = await supabase
+      .from('outdoor_units')
+      .delete()
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
       return NextResponse.json(
         { success: false, error: 'Outdoor unit not found' },
         { status: 404 }
       );
     }
-
-    const deletedUnit = outdoorUnits.splice(unitIndex, 1)[0];
 
     return NextResponse.json({
       success: true,

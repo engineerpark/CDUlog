@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { outdoorUnits, maintenanceRecords, initializeSampleData } from '../../../lib/data-store';
+import { fetchOutdoorUnits, fetchMaintenanceRecords } from '../../../lib/supabase-data-store';
 
 export async function GET(request: NextRequest) {
   try {
-    // 데이터 초기화
-    initializeSampleData();
+    // Supabase에서 데이터 로드
+    const outdoorUnits = await fetchOutdoorUnits();
+    const maintenanceRecords = await fetchMaintenanceRecords();
     
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') || 'csv';

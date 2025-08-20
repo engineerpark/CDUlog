@@ -14,7 +14,9 @@ export interface DatabaseOutdoorUnit {
   id: string;
   name: string;
   factory_id?: string;
+  factory_name?: string;
   location_id?: string;
+  location?: string;
   model?: string;
   manufacturer?: string;
   serial_number?: string;

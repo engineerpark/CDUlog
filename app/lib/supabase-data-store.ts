@@ -94,8 +94,8 @@ export const fetchOutdoorUnits = async (): Promise<OutdoorUnit[]> => {
       id: unit.id,
       name: unit.name,
       installationDate: unit.installation_date || '',
-      location: 'Unknown', // TODO: Join with locations table
-      factoryName: 'Unknown', // TODO: Join with factories table
+      location: unit.location || 'Unknown',
+      factoryName: unit.factory_name || 'Unknown',
       status: (unit.status as 'active' | 'maintenance' | 'inactive') || 'active',
       lastMaintenanceDate: unit.last_maintenance_date || '',
       nextMaintenanceDate: unit.next_maintenance_date || '',

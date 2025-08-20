@@ -4,7 +4,9 @@ import { fetchOutdoorUnits, addOutdoorUnit } from '../../lib/supabase-data-store
 
 export async function GET() {
   try {
+    console.log('Starting to fetch outdoor units...');
     const outdoorUnits = await fetchOutdoorUnits();
+    console.log('Successfully fetched', outdoorUnits.length, 'outdoor units');
     
     return NextResponse.json({
       success: true,
@@ -12,8 +14,9 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error fetching outdoor units:', error);
+    console.error('Error details:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch outdoor units' },
+      { success: false, error: 'Failed to fetch outdoor units', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

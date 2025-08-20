@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UpdateOutdoorUnitRequest } from '../../../types/outdoor-unit';
-import { updateOutdoorUnit, fetchOutdoorUnits } from '../../../lib/supabase-data-store';
+import { updateOutdoorUnit } from '../../../lib/supabase-data-store';
 import { supabase } from '../../../lib/supabase';
 
 export async function GET(

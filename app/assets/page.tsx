@@ -48,14 +48,6 @@ export default function AssetsPage() {
   // 문의사항 모달 상태
   const [showContactModal, setShowContactModal] = useState(false);
   
-  // 최근 보수 이력 상태
-  const [latestMaintenanceInfo, setLatestMaintenanceInfo] = useState<{
-    record: MaintenanceRecord;
-    unit: OutdoorUnit;
-  } | null>(null);
-  
-  // 전체 해제된 보수 이력 상태
-  const [allResolvedRecords, setAllResolvedRecords] = useState<(MaintenanceRecord & { unit: OutdoorUnit | null })[]>([]);
   
   // Supabase 연동 상태
   const [supabaseStatus, setSupabaseStatus] = useState<{
@@ -121,10 +113,6 @@ export default function AssetsPage() {
       
       if (result.success) {
         setOutdoorUnits(result.data);
-        // 최근 보수 이력 가져오기
-        fetchLatestMaintenanceRecord();
-        // 전체 해제된 보수 이력 가져오기
-        fetchAllResolvedRecords();
         // Supabase 상태 가져오기
         fetchSupabaseStatus();
       } else {
@@ -137,31 +125,6 @@ export default function AssetsPage() {
     }
   };
 
-  const fetchLatestMaintenanceRecord = async () => {
-    try {
-      const response = await fetch('/api/maintenance-records/latest');
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        setLatestMaintenanceInfo(result.data);
-      }
-    } catch (error) {
-      console.error('Error fetching latest maintenance record:', error);
-    }
-  };
-
-  const fetchAllResolvedRecords = async () => {
-    try {
-      const response = await fetch('/api/maintenance-records/all-resolved');
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        setAllResolvedRecords(result.data);
-      }
-    } catch (error) {
-      console.error('Error fetching all resolved records:', error);
-    }
-  };
 
   const fetchSupabaseStatus = async () => {
     try {
@@ -255,10 +218,6 @@ export default function AssetsPage() {
         // 성공 시 실외기 목록 새로고침 및 보수 항목 목록 새로고침
         await fetchOutdoorUnits();
         await fetchMaintenanceRecords(selectedUnit.id);
-        // 최근 보수 이력 업데이트
-        await fetchLatestMaintenanceRecord();
-        // 전체 해제된 보수 이력 업데이트
-        await fetchAllResolvedRecords();
         setCustomInput('');
         setError('유지보수 기록이 저장되었습니다.');
         
@@ -366,10 +325,6 @@ export default function AssetsPage() {
         // 성공 시 목록 새로고침
         await fetchOutdoorUnits();
         await fetchMaintenanceRecords(selectedUnit.id);
-        // 최근 보수 이력 업데이트
-        await fetchLatestMaintenanceRecord();
-        // 전체 해제된 보수 이력 업데이트
-        await fetchAllResolvedRecords();
         setError('보수 항목이 해제되었습니다.');
         
         // 3초 후 성공 메시지 제거

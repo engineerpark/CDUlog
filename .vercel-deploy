@@ -1,3 +1,1 @@
-FORCE_DEPLOY_TIMESTAMP=$(date +%s)
-# This file triggers Vercel deployment
-# Factory names update deployment: v1.1.7
+#오후

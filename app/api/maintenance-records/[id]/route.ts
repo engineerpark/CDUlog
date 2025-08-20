@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateMaintenanceRecord, fetchMaintenanceRecords } from '../../../lib/supabase-data-store';
+import { updateMaintenanceRecord } from '../../../lib/supabase-data-store';
 import { supabase } from '../../../lib/supabase';
 
 export async function PUT(

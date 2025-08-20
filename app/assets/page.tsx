@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { OutdoorUnit, CreateMaintenanceRecordRequest, MaintenanceRecord } from '../types/outdoor-unit';
 
@@ -106,27 +106,7 @@ export default function AssetsPage() {
     setFilteredUnits(filtered);
   }, [outdoorUnits, factoryFilter, statusFilter]);
 
-  const fetchOutdoorUnits = async () => {
-    try {
-      const response = await fetch('/api/outdoor-units');
-      const result = await response.json();
-      
-      if (result.success) {
-        setOutdoorUnits(result.data);
-        // Supabase 상태 가져오기
-        fetchSupabaseStatus();
-      } else {
-        setError('Failed to fetch outdoor units');
-      }
-    } catch {
-      setError('Network error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-  const fetchSupabaseStatus = async () => {
+  const fetchSupabaseStatus = useCallback(async () => {
     try {
       const healthResponse = await fetch('/api/health');
       const healthResult = await healthResponse.json();
@@ -168,7 +148,26 @@ export default function AssetsPage() {
         }
       });
     }
-  };
+  }, []);
+
+  const fetchOutdoorUnits = useCallback(async () => {
+    try {
+      const response = await fetch('/api/outdoor-units');
+      const result = await response.json();
+      
+      if (result.success) {
+        setOutdoorUnits(result.data);
+        // Supabase 상태 가져오기
+        fetchSupabaseStatus();
+      } else {
+        setError('Failed to fetch outdoor units');
+      }
+    } catch {
+      setError('Network error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchSupabaseStatus]);
 
   const fetchMaintenanceRecords = async (unitId: string) => {
     try {

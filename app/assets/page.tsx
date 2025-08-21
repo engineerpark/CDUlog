@@ -63,26 +63,6 @@ export default function AssetsPage() {
   } | null>(null);
 
   useEffect(() => {
-    // 로그인 확인
-    const checkAuth = () => {
-      const loggedIn = localStorage.getItem('isLoggedIn');
-      if (loggedIn === 'true') {
-        setIsLoggedIn(true);
-        const userInfo = localStorage.getItem('userInfo');
-        if (userInfo) {
-          const userData = JSON.parse(userInfo);
-          setUserRole(userData.role || 'user');
-        }
-        fetchOutdoorUnits();
-      } else {
-        router.push('/');
-      }
-    };
-    
-    checkAuth();
-  }, [router, fetchOutdoorUnits]);
-
-  useEffect(() => {
     // selectedUnit이 변경될 때 상태 동기화
     if (selectedUnit) {
       setSelectedStatus(selectedUnit.status === 'inactive' ? 'inactive' : 'active');
@@ -168,6 +148,26 @@ export default function AssetsPage() {
       setIsLoading(false);
     }
   }, [fetchSupabaseStatus]);
+
+  // 로그인 확인 useEffect - 함수 정의 이후 배치
+  useEffect(() => {
+    const checkAuth = () => {
+      const loggedIn = localStorage.getItem('isLoggedIn');
+      if (loggedIn === 'true') {
+        setIsLoggedIn(true);
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+          const userData = JSON.parse(userInfo);
+          setUserRole(userData.role || 'user');
+        }
+        fetchOutdoorUnits();
+      } else {
+        router.push('/');
+      }
+    };
+    
+    checkAuth();
+  }, [router, fetchOutdoorUnits]);
 
   const fetchMaintenanceRecords = async (unitId: string) => {
     try {

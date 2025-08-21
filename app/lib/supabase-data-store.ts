@@ -244,31 +244,43 @@ export const updateUnitStatus = async (unitId: string): Promise<void> => {
 // 최근 유지보수 기록 조회
 export const getLatestMaintenanceRecord = async (): Promise<{ record: MaintenanceRecord; unit: OutdoorUnit } | null> => {
   try {
-    const { data, error } = await supabase
-      .from('v_maintenance_records_detail')
+    // maintenance_records에서 최신 기록 조회
+    const { data: recordData, error: recordError } = await supabase
+      .from('maintenance_records')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
-    if (error || !data) {
+    if (recordError || !recordData) {
       return null;
     }
 
-    const record = mapDatabaseRecordToApp(data);
+    // 해당 기록의 outdoor_unit 정보 조회
+    const { data: unitData, error: unitError } = await supabase
+      .from('outdoor_units')
+      .select('*')
+      .eq('id', recordData.outdoor_unit_id)
+      .single();
+
+    if (unitError || !unitData) {
+      return null;
+    }
+
+    const record = mapDatabaseRecordToApp(recordData);
     const unit: OutdoorUnit = {
-      id: data.outdoor_unit_id,
-      name: data.unit_name || 'Unknown',
-      installationDate: '',
-      location: data.location_name || 'Unknown',
-      factoryName: data.factory_name || 'Unknown',
-      status: 'active',
-      lastMaintenanceDate: '',
-      nextMaintenanceDate: '',
-      notes: '',
+      id: unitData.id,
+      name: unitData.name,
+      installationDate: unitData.installation_date || '',
+      location: unitData.location || 'Unknown',
+      factoryName: unitData.factory_name || 'Unknown',
+      status: (unitData.status as 'active' | 'maintenance' | 'inactive') || 'active',
+      lastMaintenanceDate: unitData.last_maintenance_date || '',
+      nextMaintenanceDate: unitData.next_maintenance_date || '',
+      notes: unitData.notes || '',
       maintenanceRecords: [],
-      createdAt: data.created_at || new Date().toISOString(),
-      updatedAt: data.updated_at || new Date().toISOString()
+      createdAt: unitData.created_at || new Date().toISOString(),
+      updatedAt: unitData.updated_at || new Date().toISOString()
     };
 
     return { record, unit };

@@ -9,17 +9,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Database types based on existing Supabase schema
+// Database types based on cleaned Supabase schema
 export interface DatabaseOutdoorUnit {
   id: string;
   name: string;
-  factory_id?: string;
   factory_name?: string;
-  location_id?: string;
   location?: string;
-  model?: string;
-  manufacturer?: string;
-  serial_number?: string;
   installation_date?: string;
   status?: string;
   last_maintenance_date?: string;

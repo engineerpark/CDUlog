@@ -8,8 +8,8 @@ const mapDatabaseUnitToApp = (dbUnit: DatabaseOutdoorUnit): OutdoorUnit => ({
   id: dbUnit.id,
   name: dbUnit.name,
   installationDate: dbUnit.installation_date || '',
-  location: 'Unknown', // 별도 조회 필요
-  factoryName: 'Unknown', // 별도 조회 필요  
+  location: dbUnit.location || 'Unknown',
+  factoryName: dbUnit.factory_name || 'Unknown',
   status: (dbUnit.status as 'active' | 'maintenance' | 'inactive') || 'active',
   lastMaintenanceDate: dbUnit.last_maintenance_date || '',
   nextMaintenanceDate: dbUnit.next_maintenance_date || '',
@@ -43,6 +43,8 @@ const mapAppUnitToDatabase = (appUnit: Partial<OutdoorUnit>): Partial<DatabaseOu
   id: appUnit.id,
   name: appUnit.name,
   installation_date: appUnit.installationDate,
+  location: appUnit.location,
+  factory_name: appUnit.factoryName,
   status: appUnit.status,
   last_maintenance_date: appUnit.lastMaintenanceDate,
   next_maintenance_date: appUnit.nextMaintenanceDate,
